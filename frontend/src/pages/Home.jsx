@@ -21,130 +21,48 @@ const searchSuggestions = [
 ]
 
 const howItWorks = [
-  {
-    num: '01',
-    title: 'Upload Resume',
-    desc: 'Upload your resume in PDF format. Our AI extracts all relevant information automatically.',
-    icon: '📄'
-  },
-  {
-    num: '02',
-    title: 'AI Analysis',
-    desc: 'Our advanced AI analyzes your skills, experience, education, and qualifications.',
-    icon: '🤖'
-  },
-  {
-    num: '03',
-    title: 'Smart Matching',
-    desc: 'Get matched with the best job opportunities based on your profile.',
-    icon: '🎯'
-  },
-  {
-    num: '04',
-    title: 'Get Hired',
-    desc: 'Apply with confidence using AI-powered resume feedback and interview prep.',
-    icon: '🚀'
-  }
+  { num: '01', title: 'Upload Resume', desc: 'Upload your resume in PDF format. Our AI extracts all relevant information automatically.', icon: '📄' },
+  { num: '02', title: 'AI Analysis', desc: 'Our advanced AI analyzes your skills, experience, education, and qualifications.', icon: '🤖' },
+  { num: '03', title: 'Smart Matching', desc: 'Get matched with the best job opportunities based on your profile.', icon: '🎯' },
+  { num: '04', title: 'Get Hired', desc: 'Apply with confidence using AI-powered resume feedback and interview prep.', icon: '🚀' }
 ]
 
 const bigFeatures = [
   {
-    icon: '📄',
-    title: 'Resume Upload & Analysis',
+    icon: '📄', title: 'Resume Upload & Analysis', shape: 'hexagon',
     desc: 'Upload your resume and our AI will instantly extract and analyze all key information including skills, experience, education, and certifications.',
     features: ['PDF text extraction', 'Skill identification', 'Experience parsing', 'Education verification'],
-    link: '/upload',
-    linkText: 'Upload Your Resume',
-    color: '#667eea'
+    link: '/upload', linkText: 'Upload Your Resume'
   },
   {
-    icon: '📊',
-    title: 'ATS Score & Optimization',
+    icon: '📊', title: 'ATS Score & Optimization', shape: 'diamond',
     desc: 'See your Applicant Tracking System score and get actionable suggestions to improve your resume for better visibility to recruiters.',
     features: ['Real-time ATS scoring', 'Keyword optimization', 'Format suggestions', 'Industry-specific tips'],
-    link: '/dashboard',
-    linkText: 'Check Your Score',
-    color: '#764ba2'
+    link: '/dashboard', linkText: 'Check Your Score'
   }
 ]
 
 const smallFeatures = [
-  {
-    icon: '🎯',
-    title: 'Skill Matching',
-    desc: 'Match your skills with job requirements instantly.',
-    link: '/dashboard'
-  },
-  {
-    icon: '📈',
-    title: 'Candidate Ranking',
-    desc: 'See how you rank against other applicants.',
-    link: '/dashboard'
-  },
-  {
-    icon: '💬',
-    title: 'AI Feedback',
-    desc: 'Get personalized resume improvement tips.',
-    link: '/upload'
-  },
-  {
-    icon: '🎙️',
-    title: 'Interview Prep',
-    desc: 'Generate AI interview questions for your role.',
-    link: '/dashboard'
-  }
+  { icon: '🎯', title: 'Skill Matching', desc: 'Match your skills with job requirements instantly.', link: '/dashboard', shape: 'circle' },
+  { icon: '📈', title: 'Candidate Ranking', desc: 'See how you rank against other applicants.', link: '/dashboard', shape: 'triangle' },
+  { icon: '💬', title: 'AI Feedback', desc: 'Get personalized resume improvement tips.', link: '/upload', shape: 'star' },
+  { icon: '🎙️', title: 'Interview Prep', desc: 'Generate AI interview questions for your role.', link: '/dashboard', shape: 'pentagon' }
 ]
 
 const jobCategories = [
-  { icon: '💻', name: 'Software Engineering', count: 245, color: '#667eea', topSkills: ['Java', 'Python', 'React'] },
-  { icon: '📊', name: 'Data Science', count: 183, color: '#764ba2', topSkills: ['Python', 'SQL', 'TensorFlow'] },
-  { icon: '🎨', name: 'UI/UX Design', count: 127, color: '#f093fb', topSkills: ['Figma', 'Adobe XD', 'CSS'] },
-  { icon: '📱', name: 'Mobile Development', count: 98, color: '#4facfe', topSkills: ['React Native', 'Flutter', 'Swift'] },
-  { icon: '☁️', name: 'Cloud Computing', count: 156, color: '#43e97b', topSkills: ['AWS', 'Azure', 'Docker'] },
-  { icon: '🔒', name: 'Cybersecurity', count: 89, color: '#fa709a', topSkills: ['Network Security', 'Penetration Testing', 'SIEM'] }
+  { icon: '💻', name: 'Software Engineering', count: 245, color: '#0f2155', topSkills: ['Java', 'Python', 'React'] },
+  { icon: '📊', name: 'Data Science', count: 183, color: '#152c6e', topSkills: ['Python', 'SQL', 'TensorFlow'] },
+  { icon: '🎨', name: 'UI/UX Design', count: 127, color: '#4a7dff', topSkills: ['Figma', 'Adobe XD', 'CSS'] },
+  { icon: '📱', name: 'Mobile Development', count: 98, color: '#2a4a9f', topSkills: ['React Native', 'Flutter', 'Swift'] },
+  { icon: '☁️', name: 'Cloud Computing', count: 156, color: '#1e3a8a', topSkills: ['AWS', 'Azure', 'Docker'] },
+  { icon: '🔒', name: 'Cybersecurity', count: 89, color: '#0a1640', topSkills: ['Network Security', 'Penetration Testing', 'SIEM'] }
 ]
 
 const recommendedJobs = [
-  {
-    title: 'Senior Frontend Developer',
-    company: 'TechCorp Inc.',
-    location: 'Bangalore, India',
-    salary: '₹12-18 LPA',
-    skills: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
-    type: 'Full-time',
-    posted: '2 days ago',
-    logo: '🏢'
-  },
-  {
-    title: 'Data Scientist',
-    company: 'DataFlow Solutions',
-    location: 'Hyderabad, India',
-    salary: '₹10-16 LPA',
-    skills: ['Python', 'Machine Learning', 'SQL', 'TensorFlow'],
-    type: 'Full-time',
-    posted: '1 day ago',
-    logo: '🔬'
-  },
-  {
-    title: 'UI/UX Designer',
-    company: 'DesignStudio',
-    location: 'Mumbai, India',
-    salary: '₹8-14 LPA',
-    skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping'],
-    type: 'Full-time',
-    posted: '3 days ago',
-    logo: '🎨'
-  },
-  {
-    title: 'DevOps Engineer',
-    company: 'CloudFirst Tech',
-    location: 'Pune, India',
-    salary: '₹14-22 LPA',
-    skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform'],
-    type: 'Full-time',
-    posted: '5 hours ago',
-    logo: '☁️'
-  }
+  { title: 'Senior Frontend Developer', company: 'TechCorp Inc.', location: 'Bangalore, India', salary: '₹12-18 LPA', skills: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'], type: 'Full-time', posted: '2 days ago', logo: '🏢' },
+  { title: 'Data Scientist', company: 'DataFlow Solutions', location: 'Hyderabad, India', salary: '₹10-16 LPA', skills: ['Python', 'Machine Learning', 'SQL', 'TensorFlow'], type: 'Full-time', posted: '1 day ago', logo: '🔬' },
+  { title: 'UI/UX Designer', company: 'DesignStudio', location: 'Mumbai, India', salary: '₹8-14 LPA', skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping'], type: 'Full-time', posted: '3 days ago', logo: '🎨' },
+  { title: 'DevOps Engineer', company: 'CloudFirst Tech', location: 'Pune, India', salary: '₹14-22 LPA', skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform'], type: 'Full-time', posted: '5 hours ago', logo: '☁️' }
 ]
 
 function Home() {
@@ -195,9 +113,23 @@ function Home() {
   return (
     <div className="home-page">
 
+      {/* Decorative Background Shapes */}
+      <div className="home-decor">
+        <div className="deco-circle deco-circle-1"></div>
+        <div className="deco-circle deco-circle-2"></div>
+        <div className="deco-circle deco-circle-3"></div>
+        <div className="deco-blob deco-blob-1"></div>
+        <div className="deco-blob deco-blob-2"></div>
+        <div className="deco-wave"></div>
+      </div>
+
       {/* Hero Section */}
       <section className="hero-section">
-        <h1>AI Resume Screening<br />& Job Matching</h1>
+        <div className="hero-badge">
+          <span className="badge-dot"></span>
+          AI-Powered Resume Screening
+        </div>
+        <h1>Find Your Dream Job<br /><span className="hero-highlight">With AI Power</span></h1>
         <p className="hero-subtitle">
           Upload your resume and let our AI analyze, score, and match you with the best job opportunities.
         </p>
@@ -236,17 +168,27 @@ function Home() {
 
       {/* Stats */}
       <section className="stats-section">
-        <div className="stat-item"><span className="stat-number">10K+</span><span className="stat-label">Resumes Analyzed</span></div>
-        <div className="stat-item"><span className="stat-number">5K+</span><span className="stat-label">Jobs Matched</span></div>
-        <div className="stat-item"><span className="stat-number">95%</span><span className="stat-label">Accuracy Rate</span></div>
-        <div className="stat-item"><span className="stat-number">500+</span><span className="stat-label">Companies</span></div>
+        <div className="stats-bg-shape"></div>
+        {[
+          { num: '10K+', label: 'Resumes Analyzed', icon: '📄' },
+          { num: '5K+', label: 'Jobs Matched', icon: '💼' },
+          { num: '95%', label: 'Accuracy Rate', icon: '✅' },
+          { num: '500+', label: 'Companies', icon: '🏢' }
+        ].map((s, i) => (
+          <div key={i} className="stat-item">
+            <span className="stat-icon">{s.icon}</span>
+            <span className="stat-number">{s.num}</span>
+            <span className="stat-label">{s.label}</span>
+          </div>
+        ))}
       </section>
 
-      {/* How It Works - Left Sidebar Layout */}
+      {/* How It Works */}
       <section className="how-it-works-section">
+        <div className="how-it-works-bg"></div>
         <div className="how-it-works-left">
-          <h2 className="section-title">How It Works</h2>
-          <p className="section-subtitle">Get started in 4 simple steps</p>
+          <div className="section-badge">How It Works</div>
+          <h2 className="section-title">Get Started in 4 Simple Steps</h2>
           <div className="steps-list">
             {howItWorks.map((step, i) => (
               <div key={i} className="step-item">
@@ -264,56 +206,58 @@ function Home() {
           </div>
         </div>
         <div className="how-it-works-right">
-          <div className="how-it-works-visual">
-            <div className="visual-card visual-card-1">
-              <span>📄</span>
-              <p>Upload</p>
-            </div>
-            <div className="visual-card visual-card-2">
-              <span>🤖</span>
-              <p>Analyze</p>
-            </div>
-            <div className="visual-card visual-card-3">
-              <span>🎯</span>
-              <p>Match</p>
-            </div>
-            <div className="visual-card visual-card-4">
-              <span>🚀</span>
-              <p>Hired</p>
-            </div>
+          <div className="visual-cards-stack">
+            <div className="visual-card vc-1"><span>📄</span><p>Upload</p></div>
+            <div className="visual-card vc-2"><span>🤖</span><p>Analyze</p></div>
+            <div className="visual-card vc-3"><span>🎯</span><p>Match</p></div>
+            <div className="visual-card vc-4"><span>🚀</span><p>Hired</p></div>
+          </div>
+          <div className="visual-shapes">
+            <div className="v-shape v-shape-1"></div>
+            <div className="v-shape v-shape-2"></div>
+            <div className="v-shape v-shape-3"></div>
           </div>
         </div>
       </section>
 
-      {/* Big Feature Cards */}
-      <section className="section">
+      {/* Features */}
+      <section className="features-section">
+        <div className="features-bg-shapes">
+          <div className="f-shape f-shape-1"></div>
+          <div className="f-shape f-shape-2"></div>
+          <div className="f-shape f-shape-3"></div>
+        </div>
+        <div className="section-badge">Features</div>
         <h2 className="section-title">Powerful Features</h2>
         <p className="section-subtitle">Everything you need to land your dream job</p>
 
         <div className="big-features">
           {bigFeatures.map((feature, i) => (
-            <div key={i} className="big-feature-card">
-              <div className="big-feature-left">
-                <span className="big-feature-icon">{feature.icon}</span>
-                <h3>{feature.title}</h3>
-                <p>{feature.desc}</p>
-                <Link to={feature.link} className="card-link">{feature.linkText} →</Link>
+            <div key={i} className={`big-feature-card bfc-${feature.shape}`}>
+              <div className="bfc-glow"></div>
+              <div className="bfc-shape-icon">
+                <span>{feature.icon}</span>
+                <div className={`shape-bg shape-${feature.shape}`}></div>
               </div>
-              <div className="big-feature-right">
-                <ul>
-                  {feature.features.map((f, j) => (
-                    <li key={j}>✓ {f}</li>
-                  ))}
-                </ul>
-              </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+              <ul>
+                {feature.features.map((f, j) => (
+                  <li key={j}>✓ {f}</li>
+                ))}
+              </ul>
+              <Link to={feature.link} className="card-link">{feature.linkText} →</Link>
             </div>
           ))}
         </div>
 
         <div className="small-features">
           {smallFeatures.map((feature, i) => (
-            <div key={i} className="small-feature-card">
-              <span className="small-feature-icon">{feature.icon}</span>
+            <div key={i} className={`small-feature-card sfc-${feature.shape}`}>
+              <div className="sfc-icon-wrap">
+                <span className="sfc-icon">{feature.icon}</span>
+                <div className={`sfc-shape sfc-shape-${feature.shape}`}></div>
+              </div>
               <h4>{feature.title}</h4>
               <p>{feature.desc}</p>
               <Link to={feature.link} className="small-card-link">Learn More →</Link>
@@ -322,71 +266,93 @@ function Home() {
         </div>
       </section>
 
-      {/* Job Categories - Attractive Design */}
-      <section className="section categories-section">
-        <h2 className="section-title">Popular Job Categories</h2>
-        <p className="section-subtitle">Explore opportunities across various domains</p>
-        <div className="categories-grid">
-          {jobCategories.map((cat, i) => (
-            <div key={i} className="category-card" style={{ borderTopColor: cat.color }}>
-              <div className="category-header">
-                <span className="category-icon">{cat.icon}</span>
-                <div>
-                  <h4>{cat.name}</h4>
-                  <span className="category-count">{cat.count} open positions</span>
-                </div>
-              </div>
-              <div className="category-skills">
-                {cat.topSkills.map((skill, j) => (
-                  <span key={j} className="cat-skill">{skill}</span>
-                ))}
-              </div>
-              <div className="category-bar">
-                <div className="category-bar-fill" style={{ width: `${(cat.count / 250) * 100}%`, background: cat.color }}></div>
-              </div>
-            </div>
-          ))}
+      {/* Categories + Jobs */}
+      <section className="explore-section">
+        <div className="explore-bg">
+          <div className="exp-shape exp-shape-1"></div>
+          <div className="exp-shape exp-shape-2"></div>
         </div>
-      </section>
-
-      {/* Recommended Jobs */}
-      <section className="section">
-        <h2 className="section-title">Recommended Jobs</h2>
-        <p className="section-subtitle">Popular opportunities you might be interested in</p>
-        <div className="jobs-grid">
-          {recommendedJobs.map((job, i) => (
-            <div key={i} className="job-card">
-              <div className="job-top">
-                <span className="job-logo">{job.logo}</span>
-                <div>
-                  <h3>{job.title}</h3>
-                  <p className="job-company">{job.company}</p>
-                </div>
-                <span className="job-type">{job.type}</span>
-              </div>
-              <div className="job-details">
-                <span>📍 {job.location}</span>
-                <span>💰 {job.salary}</span>
-              </div>
-              <div className="job-skills">
-                {job.skills.map((skill, j) => (
-                  <span key={j} className="skill-tag">{skill}</span>
-                ))}
-              </div>
-              <div className="job-footer">
-                <span className="job-posted">{job.posted}</span>
-                <Link to="/upload" className="job-apply-btn">Apply Now →</Link>
-              </div>
+        <div className="explore-container">
+          <div className="categories-panel">
+            <div className="cp-header">
+              <div className="section-badge section-badge-light">Categories</div>
+              <h2>Popular Job Categories</h2>
+              <p>Explore opportunities across various domains</p>
             </div>
-          ))}
+            <div className="cat-list">
+              {jobCategories.map((cat, i) => (
+                <div key={i} className="cat-item" style={{ '--cat-color': cat.color }}>
+                  <span className="cat-item-icon">{cat.icon}</span>
+                  <div className="cat-item-info">
+                    <h4>{cat.name}</h4>
+                    <span>{cat.count} open positions</span>
+                  </div>
+                  <div className="cat-item-bar">
+                    <div className="cat-item-bar-fill" style={{ width: `${(cat.count / 250) * 100}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="categories-cta">
+              <span className="categories-count-big">898+</span>
+              <span className="categories-label">Total Open Positions</span>
+            </div>
+          </div>
+
+          <div className="jobs-panel">
+            <div className="jobs-panel-header">
+              <div>
+                <div className="section-badge">Jobs</div>
+                <h2>Recommended Jobs</h2>
+                <p>Popular opportunities you might be interested in</p>
+              </div>
+              <Link to="/dashboard" className="view-all-btn">View All →</Link>
+            </div>
+            <div className="jobs-list">
+              {recommendedJobs.map((job, i) => (
+                <div key={i} className="job-card-new">
+                  <div className="jcn-left">
+                    <div className="jcn-logo-wrap">
+                      <span className="jcn-logo">{job.logo}</span>
+                    </div>
+                  </div>
+                  <div className="jcn-center">
+                    <h3>{job.title}</h3>
+                    <p className="jcn-company">{job.company}</p>
+                    <div className="jcn-meta">
+                      <span>📍 {job.location}</span>
+                      <span>💰 {job.salary}</span>
+                      <span>⏰ {job.posted}</span>
+                    </div>
+                    <div className="jcn-skills">
+                      {job.skills.map((skill, j) => (
+                        <span key={j} className="jcn-skill">{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="jcn-right">
+                    <span className="jcn-type">{job.type}</span>
+                    <Link to="/upload" className="jcn-apply">Apply →</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* CTA */}
       <section className="cta-section">
-        <h2>Ready to Find Your Dream Job?</h2>
-        <p>Upload your resume now and let our AI do the hard work for you.</p>
-        <Link to="/upload" className="cta-btn">Get Started Free →</Link>
+        <div className="cta-shapes">
+          <div className="cta-shape cta-shape-1"></div>
+          <div className="cta-shape cta-shape-2"></div>
+          <div className="cta-shape cta-shape-3"></div>
+        </div>
+        <div className="cta-content">
+          <h2>Ready to Find Your Dream Job?</h2>
+          <p>Upload your resume now and let our AI do the hard work for you.</p>
+          <Link to="/upload" className="cta-btn">Get Started Free →</Link>
+        </div>
       </section>
     </div>
   )
