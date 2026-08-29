@@ -1890,6 +1890,34 @@
 }
 .dash-error .msg-link { margin-left: auto; }
 
+.dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.dash-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.3rem;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 31, 31, 0.4);
+  background: rgba(160, 31, 31, 0.08);
+  color: #a01f1f;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+.dash-logout-btn:hover {
+  background: #a01f1f;
+  color: #F5F6EC;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(160, 31, 31, 0.3);
+}
+
 /* Upload message variants + parse result */
 .upload-message.error {
   background: #fde8e8;
@@ -1977,6 +2005,23 @@
 
 /* Home search loading state */
 .jcn-loading { grid-column: 1 / -1; text-align: center; color: #5a6640; padding: 1rem; }
+
+.search-feedback {
+  margin-top: 0.9rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1e3a8a, #4a7dff);
+  color: #F5F6EC;
+  font-weight: 700;
+  font-size: 0.98rem;
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.25);
+  animation: cardIn 0.4s ease both;
+}
+.search-feedback.empty {
+  background: #fde8e8;
+  color: #a01f1f;
+  box-shadow: 0 8px 20px rgba(160, 31, 31, 0.15);
+}
 
 @media (max-width: 640px) {
   .job-form-row { grid-template-columns: 1fr; }

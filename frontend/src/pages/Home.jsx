@@ -75,6 +75,7 @@ function Home() {
   const [searchError, setSearchError] = useState('')
   const [searching, setSearching] = useState(false)
   const searchRef = useRef(null)
+  const resultsRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,16 +111,20 @@ function Home() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion)
     setShowSuggestions(false)
-    runSearch()
+    runSearch(suggestion)
   }
 
-  const runSearch = async () => {
-    if (!searchQuery) return
+  const runSearch = async (query) => {
+    const term = (query ?? searchQuery).trim()
+    if (!term) return
     setSearching(true)
     setSearchError('')
     try {
-      const jobs = await api(`/jobs?search=${encodeURIComponent(searchQuery)}`)
+      const jobs = await api(`/jobs?search=${encodeURIComponent(term)}`)
       setSearchResults(jobs)
+      if (resultsRef.current) {
+        setTimeout(() => resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+      }
     } catch (err) {
       setSearchError(err.message)
     } finally {
@@ -178,6 +183,18 @@ function Home() {
                   <span className="suggestion-text">{s}</span>
                 </div>
               ))}
+            </div>
+          )}
+          {searchResults && (
+            <div className={`search-feedback ${searchResults.length === 0 ? 'empty' : ''}`}>
+              {searchResults.length > 0
+                ? `✓ Found ${searchResults.length} job${searchResults.length > 1 ? 's' : ''} for "${searchQuery}". Scrolling to results below.`
+                : `No jobs found for "${searchQuery}". Try a different keyword.`}
+            </div>
+          )}
+          {searchError && (
+            <div className="search-feedback empty">
+              ⚠️ {searchError}
             </div>
           )}
         </div>
@@ -322,7 +339,7 @@ function Home() {
             </div>
           </div>
 
-          <div className="jobs-panel">
+          <div className="jobs-panel" ref={resultsRef}>
             <div className="jobs-panel-header">
               <div>
                 <div className="section-badge">Jobs</div>

@@ -148,25 +148,57 @@ def _months_between(start: tuple[int, int], end: tuple[int, int]) -> float:
     return max(0.0, (end[0] - start[0]) * 12 + (end[1] - start[1]))
 
 
-def _parse_experience_years(text: str) -> float:
-    claim = _YEARS_CLAIM_RE.search(text)
-    ranges_total = 0.0
+def _sum_date_ranges(text: str) -> float:
+    """Sum all date-range spans found in *text* (months), skipping bad ranges."""
+    total = 0.0
     now = datetime.now()
     for m in _DATE_RANGE_RE.finditer(text):
         sm, sy, em, ey = m.groups()
-        start_year = int(sy)
+        try:
+            start_year = int(sy)
+        except (TypeError, ValueError):
+            continue
         start_month = _MONTHS.get((sm or "jan")[:3].lower(), 1)
-        if ey.lower() in ("present", "current", "now") or "date" in ey.lower():
+        if ey and ey.lower() in ("present", "current", "now"):
             end_year, end_month = now.year, now.month
         else:
-            end_year = int(ey)
+            try:
+                end_year = int(ey)
+            except (TypeError, ValueError):
+                continue
             end_month = _MONTHS.get((em or "dec")[:3].lower(), 12)
         if start_year < 1980 or end_year > now.year + 1 or end_year < start_year:
             continue
-        ranges_total += _months_between((start_year, start_month), (end_year, end_month))
-    range_years = round(ranges_total / 12, 1)
+        total += _months_between((start_year, start_month), (end_year, end_month))
+    return total
+
+
+def _parse_experience_years(text: str) -> float:
+    # 1) Most reliable signal: an explicit "X years" claim anywhere.
+    claim = _YEARS_CLAIM_RE.search(text)
     claim_years = float(claim.group(1)) if claim else 0.0
-    return min(max(range_years, claim_years), 45.0)
+
+    # 2) Otherwise sum the date ranges that appear *inside the work-experience
+    #    section* only, so education/project dates are not counted as experience.
+    exp_section = _extract_section(text, "experience")
+    if exp_section:
+        months = _sum_date_ranges(exp_section)
+        if months > 0:
+            range_years = round(months / 12, 1)
+        else:
+            range_years = claim_years
+    else:
+        range_years = claim_years
+
+    # 3) If we only have a claimed figure, trust it; otherwise use the larger
+    #    of the two signals but cap it so one stray date cannot explode it.
+    if claim_years > 0 and range_years > 0:
+        # Prefer the range (more granular) but never exceed ~1.5x the claim,
+        # in case a duplicated/unrelated range inflated it.
+        years = min(range_years, claim_years * 1.5)
+    else:
+        years = max(range_years, claim_years)
+    return round(min(years, 45.0), 1)
 
 
 def _extract_section(text: str, section: str) -> str | None:

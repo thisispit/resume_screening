@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authedApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
 function Dashboard() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [resume, setResume] = useState(null)
   const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -96,9 +97,18 @@ function Dashboard() {
               : 'View your uploaded resume, matching results, and analytics.'}
           </p>
         </div>
-        <Link to="/upload" className="dash-upload-btn">
-          <span>📤</span> Upload Resume
-        </Link>
+        <div className="dash-header-actions">
+          <Link to="/upload" className="dash-upload-btn">
+            <span>📤</span> Upload Resume
+          </Link>
+          <button
+            className="dash-logout-btn"
+            onClick={() => { logout(); navigate('/') }}
+            title="Log out"
+          >
+            <span>🚪</span> Logout
+          </button>
+        </div>
       </section>
 
       {error && (
