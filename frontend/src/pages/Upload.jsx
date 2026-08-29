@@ -1,15 +1,21 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { authedApi } from '../api/client'
 
 function Upload() {
   const [file, setFile] = useState(null)
   const [message, setMessage] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0])
     setMessage('')
+    setError('')
+    setResult(null)
   }
 
   const handleDragOver = (e) => {
@@ -26,24 +32,46 @@ function Upload() {
     e.preventDefault()
     setIsDragging(false)
     const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile && droppedFile.type === 'application/pdf') {
+    if (droppedFile && /\.(pdf|docx)$/i.test(droppedFile.name)) {
       setFile(droppedFile)
       setMessage('')
+      setError('')
+      setResult(null)
     } else {
-      setMessage('Please upload a PDF file only.')
+      setError('Please upload a PDF or DOCX file.')
     }
   }
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) {
-      setMessage('Please select a file first.')
+      setError('Please select a file first.')
       return
     }
     setUploading(true)
-    setTimeout(() => {
-      setMessage(`Selected: ${file.name}. Backend not connected yet - this is Step 1.`)
+    setError('')
+    setMessage('')
+    setResult(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const data = await authedApi('/resumes/upload', {
+        method: 'POST',
+        body: formData,
+        isForm: true,
+      })
+      setResult(data)
+      setMessage(`Resume "${file.name}" uploaded and analyzed successfully.`)
+    } catch (err) {
+      if (err.status === 401) {
+        setError('Please log in as a candidate to upload your resume.')
+      } else {
+        setError(err.message)
+      }
+    } finally {
       setUploading(false)
-    }, 1500)
+    }
   }
 
   const features = [
@@ -55,8 +83,6 @@ function Upload() {
 
   return (
     <div className="upload-page">
-
-      {/* Decorative Background */}
       <div className="upload-decor">
         <div className="up-circle up-circle-1"></div>
         <div className="up-circle up-circle-2"></div>
@@ -66,16 +92,19 @@ function Upload() {
         <div className="up-grid-pattern"></div>
       </div>
 
-      {/* Header */}
       <section className="upload-header">
         <div className="section-badge">Upload</div>
         <h1>Upload Your Resume</h1>
         <p>Let our AI analyze your resume and find the best job matches for you.</p>
       </section>
 
-      {/* Upload Area */}
       <section className="upload-main">
-        <div className={`upload-area ${isDragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}>
+        <div
+          className={`upload-area ${isDragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <div className="ua-bg-shapes">
             <div className="ua-shape ua-shape-1"></div>
             <div className="ua-shape ua-shape-2"></div>
@@ -95,11 +124,11 @@ function Upload() {
               <p>or click to browse files</p>
               <div className="ua-formats">
                 <span className="format-tag">PDF</span>
-                <span className="format-tag">Max 10MB</span>
+                <span className="format-tag">DOCX</span>
               </div>
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.docx"
                 onChange={handleFileChange}
                 className="file-input"
               />
@@ -113,7 +142,7 @@ function Upload() {
                 <button onClick={handleUpload} className="btn btn-primary" disabled={uploading}>
                   {uploading ? 'Analyzing...' : 'Analyze Resume'}
                 </button>
-                <button onClick={() => { setFile(null); setMessage('') }} className="btn btn-secondary">
+                <button onClick={() => { setFile(null); setMessage(''); setResult(null); setError('') }} className="btn btn-secondary">
                   Choose Different File
                 </button>
               </div>
@@ -130,16 +159,72 @@ function Upload() {
           </div>
         )}
 
-        {message && (
-          <div className="upload-message">
-            <span className="msg-icon">✅</span>
-            <p>{message}</p>
-            <Link to="/dashboard" className="msg-link">View Dashboard →</Link>
+        {error && (
+          <div className="upload-message error">
+            <span className="msg-icon">⚠️</span>
+            <p>{error}</p>
+            {error.includes('log in') && <Link to="/login" className="msg-link">Log In →</Link>}
+          </div>
+        )}
+
+        {result && (
+          <div className="parse-result">
+            <div className="upload-message">
+              <span className="msg-icon">✅</span>
+              <p>{message}</p>
+              <button onClick={() => navigate('/dashboard')} className="msg-link">View Dashboard →</button>
+            </div>
+
+            <div className="pr-grid">
+              <div className="pr-card">
+                <h4>Contact</h4>
+                <p><strong>Name:</strong> {result.candidate_name || '—'}</p>
+                <p><strong>Email:</strong> {result.email || '—'}</p>
+                <p><strong>Phone:</strong> {result.phone || '—'}</p>
+                <p><strong>Location:</strong> {result.location || '—'}</p>
+              </div>
+              <div className="pr-card">
+                <h4>Skills ({result.skills?.length || 0})</h4>
+                <div className="pr-tags">
+                  {(result.skills || []).map((s, i) => (
+                    <span key={i} className="pr-tag">{s}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="pr-card pr-wide">
+                <h4>Summary</h4>
+                <p>{result.summary || 'No summary extracted.'}</p>
+              </div>
+              <div className="pr-card pr-wide">
+                <h4>Experience ({result.total_experience_years || 0} yrs)</h4>
+                {(result.experience || []).length === 0 && <p className="pr-empty">No experience extracted.</p>}
+                <ul className="pr-list">
+                  {(result.experience || []).map((exp, i) => (
+                    <li key={i}>
+                      {exp.title || 'Role'} at {exp.company || '—'}
+                      {exp.duration_years != null && ` (${exp.duration_years} yrs)`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="pr-card pr-wide">
+                <h4>Education</h4>
+                {(result.education || []).length === 0 && <p className="pr-empty">No education extracted.</p>}
+                <ul className="pr-list">
+                  {(result.education || []).map((ed, i) => (
+                    <li key={i}>
+                      {ed.degree || 'Degree'}
+                      {ed.institution && ` · ${ed.institution}`}
+                      {ed.year && ` · ${ed.year}`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         )}
       </section>
 
-      {/* Features Grid */}
       <section className="upload-features">
         <div className="uf-shapes">
           <div className="uf-shape uf-shape-1"></div>
@@ -160,7 +245,6 @@ function Upload() {
         </div>
       </section>
 
-      {/* Steps */}
       <section className="upload-steps">
         <h2>Simple 3-Step Process</h2>
         <div className="us-grid">

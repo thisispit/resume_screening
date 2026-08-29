@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
   const location = useLocation()
+  const { authenticated, user, logout } = useAuth()
 
   return (
     <nav className="navbar">
@@ -27,6 +29,23 @@ function Navbar() {
           <span className="nav-icon">📊</span>
           <span>Dashboard</span>
         </Link>
+        {authenticated && user?.role === 'recruiter' && (
+          <Link to="/post-job" className={location.pathname === '/post-job' ? 'active' : ''}>
+            <span className="nav-icon">➕</span>
+            <span>Post Job</span>
+          </Link>
+        )}
+        {authenticated ? (
+          <button onClick={logout} className="nav-auth-btn logout">
+            <span className="nav-icon">🚪</span>
+            <span>{user?.full_name ?? 'Logout'}</span>
+          </button>
+        ) : (
+          <Link to="/login" className="nav-auth-btn login">
+            <span className="nav-icon">🔑</span>
+            <span>Login</span>
+          </Link>
+        )}
       </div>
     </nav>
   )

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '../api/client'
 
 const searchSuggestions = [
   'Data Scientist', 'Data Analyst', 'Data Engineering',
@@ -69,6 +70,10 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [liveJobs, setLiveJobs] = useState([])
+  const [searchResults, setSearchResults] = useState(null)
+  const [searchError, setSearchError] = useState('')
+  const [searching, setSearching] = useState(false)
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -79,6 +84,12 @@ function Home() {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    api('/jobs')
+      .then(setLiveJobs)
+      .catch(() => { /* backend may be down; fall back to static */ })
   }, [])
 
   const handleSearchChange = (e) => {
@@ -99,15 +110,27 @@ function Home() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion)
     setShowSuggestions(false)
-    alert(`Searching for: ${suggestion}. Backend not connected yet.`)
+    runSearch()
+  }
+
+  const runSearch = async () => {
+    if (!searchQuery) return
+    setSearching(true)
+    setSearchError('')
+    try {
+      const jobs = await api(`/jobs?search=${encodeURIComponent(searchQuery)}`)
+      setSearchResults(jobs)
+    } catch (err) {
+      setSearchError(err.message)
+    } finally {
+      setSearching(false)
+    }
   }
 
   const handleSearch = (e) => {
     e.preventDefault()
     setShowSuggestions(false)
-    if (searchQuery) {
-      alert(`Searching for: ${searchQuery}. Backend not connected yet.`)
-    }
+    runSearch()
   }
 
   return (
@@ -303,39 +326,69 @@ function Home() {
             <div className="jobs-panel-header">
               <div>
                 <div className="section-badge">Jobs</div>
-                <h2>Recommended Jobs</h2>
+                <h2>{searchResults ? `Results for "${searchQuery}"` : 'Recommended Jobs'}</h2>
                 <p>Popular opportunities you might be interested in</p>
               </div>
               <Link to="/dashboard" className="view-all-btn">View All →</Link>
             </div>
             <div className="jobs-list">
-              {recommendedJobs.map((job, i) => (
-                <div key={i} className="job-card-new">
+              {searching && <p className="jcn-loading">Searching jobs...</p>}
+              {searchError && <p className="jcn-loading">{searchError}</p>}
+              {!searchResults && !searching && (liveJobs.length > 0 ? liveJobs : recommendedJobs).map((job, i) => (
+                <div key={job.id ?? i} className="job-card-new">
                   <div className="jcn-left">
                     <div className="jcn-logo-wrap">
-                      <span className="jcn-logo">{job.logo}</span>
+                      <span className="jcn-logo">{job.logo ?? '💼'}</span>
                     </div>
                   </div>
                   <div className="jcn-center">
                     <h3>{job.title}</h3>
-                    <p className="jcn-company">{job.company}</p>
+                    <p className="jcn-company">{job.company_name ?? job.company}</p>
                     <div className="jcn-meta">
-                      <span>📍 {job.location}</span>
-                      <span>💰 {job.salary}</span>
-                      <span>⏰ {job.posted}</span>
+                      <span>📍 {job.location || 'Remote'}</span>
+                      {job.salary_min != null && <span>💰 {job.salary_min}-{job.salary_max ?? ''}</span>}
+                      <span>⏰ {job.employment_type ?? 'Full-time'}</span>
                     </div>
                     <div className="jcn-skills">
-                      {job.skills.map((skill, j) => (
+                      {(job.required_skills ?? job.skills ?? []).map((skill, j) => (
                         <span key={j} className="jcn-skill">{skill}</span>
                       ))}
                     </div>
                   </div>
                   <div className="jcn-right">
-                    <span className="jcn-type">{job.type}</span>
+                    <span className="jcn-type">{job.employment_type ?? job.type}</span>
                     <Link to="/upload" className="jcn-apply">Apply →</Link>
                   </div>
                 </div>
               ))}
+              {searchResults && searchResults.length > 0 && searchResults.map((job, i) => (
+                <div key={job.id} className="job-card-new">
+                  <div className="jcn-left">
+                    <div className="jcn-logo-wrap"><span className="jcn-logo">💼</span></div>
+                  </div>
+                  <div className="jcn-center">
+                    <h3>{job.title}</h3>
+                    <p className="jcn-company">{job.company_name}</p>
+                    <div className="jcn-meta">
+                      <span>📍 {job.location || 'Remote'}</span>
+                      {job.salary_min != null && <span>💰 {job.salary_min}-{job.salary_max ?? ''}</span>}
+                      <span>⏰ {job.employment_type}</span>
+                    </div>
+                    <div className="jcn-skills">
+                      {(job.required_skills ?? []).map((skill, j) => (
+                        <span key={j} className="jcn-skill">{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="jcn-right">
+                    <span className="jcn-type">{job.employment_type}</span>
+                    <Link to="/upload" className="jcn-apply">Apply →</Link>
+                  </div>
+                </div>
+              ))}
+              {searchResults && searchResults.length === 0 && !searching && (
+                <p className="jcn-loading">No jobs found for "{searchQuery}".</p>
+              )}
             </div>
           </div>
         </div>
