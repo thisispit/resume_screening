@@ -46,9 +46,24 @@ class MatchResult:
         }
 
 
-def _resume_text_for_semantic(resume_text: str, resume_skills: list[str]) -> str:
+def _resume_text_for_semantic(resume_text: str, resume_skills: list[str], resume_context: str | None = None) -> str:
+    if resume_context:
+        return resume_context
     parts = [resume_text[:1500], ", ".join(resume_skills)]
     return " ".join(p for p in parts if p)
+
+
+def _semantic_score(resume_text: str, job_text: str) -> float:
+    """Semantic fit in [0,100]: LLM when available, else local embeddings."""
+    from app.ai import llm
+
+    if settings.USE_LLM_MATCHING and llm.is_llm_available():
+        try:
+            return llm.match_resume_to_job(resume_text[:6000], job_text[:4000])
+        except Exception as exc:
+            print(f"[matcher] LLM matching failed ({exc}); using local embeddings")
+    sim = embedder.semantic_similarity(resume_text[:1500], job_text[:1500])
+    return sim * 100
 
 
 def compute_match(
@@ -61,6 +76,7 @@ def compute_match(
     required_skills: list[str],
     min_experience_years: float,
     education_level: str,
+    resume_context: str | None = None,
 ) -> MatchResult:
     """Score one candidate resume against one job posting."""
     result = MatchResult()
@@ -73,11 +89,10 @@ def compute_match(
 
     # 2) Semantic similarity between resume content and the job description + skills
     job_text = f"{job_description}\nRequired skills: {', '.join(required_skills)}"
-    sim = embedder.semantic_similarity(
-        _resume_text_for_semantic(raw_text or "", candidate_skills),
-        job_text[:1500],
+    result.semantic_score = _semantic_score(
+        _resume_text_for_semantic(raw_text or "", candidate_skills, resume_context),
+        job_text,
     )
-    result.semantic_score = sim * 100
 
     # 3) Experience — capped ratio, full credit once the bar is met
     if min_experience_years <= 0:

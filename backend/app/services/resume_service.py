@@ -65,6 +65,38 @@ def delete_resume_file(resume: Resume) -> None:
     path.unlink(missing_ok=True)
 
 
+def _build_resume_context(resume: Resume) -> str | None:
+    """A compact, structured summary of the resume for semantic/LLM matching."""
+    parts: list[str] = []
+    if resume.summary:
+        parts.append(f"The candidate describes themselves as: {resume.summary}")
+    if resume.skills:
+        parts.append(f"Skills: {', '.join(resume.skills)}")
+    if resume.experience:
+        roles = [
+            f"{e.get('title', '')} at {e.get('company', '')}".strip()
+            for e in resume.experience
+            if e.get("title") or e.get("company")
+        ]
+        if roles:
+            parts.append(f"Work history: {'; '.join(roles)}")
+    if resume.education:
+        degrees = [
+            e.get("degree", "")
+            + (f" ({e.get('field_of_study')})" if e.get("field_of_study") else "")
+            + (f", {e.get('institution')}" if e.get("institution") else "")
+            for e in resume.education
+            if e.get("degree")
+        ]
+        if degrees:
+            parts.append(f"Education: {'; '.join(degrees)}")
+    if resume.total_experience_years:
+        parts.append(f"Total experience: {resume.total_experience_years} years")
+    if resume.highest_education_level and resume.highest_education_level != "none":
+        parts.append(f"Highest education: {resume.highest_education_level}")
+    return "\n".join(parts) if parts else None
+
+
 async def create_or_replace_resume(db: Session, user: User, upload: UploadFile) -> Resume:
     file_type = validate_upload(upload)
     existing = get_resume_for_user(db, user)
@@ -105,6 +137,7 @@ def recommend_jobs(db: Session, resume: Resume, limit: int = 10) -> list[dict]:
     """Rank active jobs against the candidate's resume."""
     jobs = db.query(Job).filter(Job.is_active.is_(True)).all()
     scored: list[dict] = []
+    context = _build_resume_context(resume)
     for job in jobs:
         result = compute_match(
             raw_text=resume.raw_text,
@@ -115,6 +148,7 @@ def recommend_jobs(db: Session, resume: Resume, limit: int = 10) -> list[dict]:
             required_skills=job.required_skills or [],
             min_experience_years=job.min_experience_years or 0.0,
             education_level=job.education_level,
+            resume_context=context,
         )
         item = result.as_dict()
         item.update(

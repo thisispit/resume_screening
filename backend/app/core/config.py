@@ -46,6 +46,17 @@ class Settings(BaseSettings):
     WEIGHT_EXPERIENCE: float = 0.15
     WEIGHT_EDUCATION: float = 0.10
 
+    # Optional LLM (OpenAI-compatible chat-completions API).
+    # Leave LLM_API_KEY empty and the app runs fully offline using the
+    # heuristic parser + local embeddings. Add a key later to switch to
+    # high-accuracy LLM parsing and matching — no code changes needed.
+    LLM_PROVIDER: str = "groq"  # groq | openrouter | openai | gemini
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = ""  # empty -> provider default
+    LLM_BASE_URL: str = ""  # empty -> provider default
+    LLM_TIMEOUT_SECONDS: int = 90
+    USE_LLM_MATCHING: bool = True
+
     # Seed
     SEED_ADMIN_EMAIL: str = "admin@demo.com"
     SEED_ADMIN_PASSWORD: str = "admin1234"

@@ -8,6 +8,8 @@ _TMP_DIR = tempfile.mkdtemp(prefix="resume_api_test_")
 os.environ["DATABASE_URL"] = f"sqlite:///{_TMP_DIR}/test.db"
 os.environ["SENTENCE_TRANSFORMER_MODEL"] = ""  # offline fuzzy fallback in tests
 os.environ["UPLOAD_DIR"] = os.path.join(_TMP_DIR, "uploads")
+os.environ["LLM_API_KEY"] = ""  # keep tests deterministic/offline
+os.environ["USE_LLM_MATCHING"] = "false"
 
 import pytest  # noqa: E402
 from docx import Document  # noqa: E402

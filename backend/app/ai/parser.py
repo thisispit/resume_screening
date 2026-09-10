@@ -1,11 +1,17 @@
-"""Resume file parsing: PDF/DOCX text extraction + structured information parsing."""
+"""Resume file parsing: PDF/DOCX text extraction + structured information parsing.
+
+`parse_resume()` is LLM-first: when an LLM API key is configured (see
+:mod:`app.ai.llm`) it uses the LLM for accurate extraction; otherwise it
+falls back to the local heuristic parser. The app therefore works fully
+offline, and gets much better accuracy the moment a key is added.
+"""
 
 from __future__ import annotations
 
 import re
 from datetime import datetime
 
-PARSER_VERSION = "1.0"
+PARSER_VERSION = "2.1"
 
 _EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 _PHONE_RE = re.compile(
@@ -13,10 +19,18 @@ _PHONE_RE = re.compile(
 )
 
 _EDUCATION_PATTERNS: list[tuple[str, str]] = [
-    (r"ph\.?d|doctorate", "phd"),
-    (r"m\.?tech|m\.?e\b(?!c)|master of (?:technology|engineering|science|business)|m\.?sc|m\.?b\.?a|m\.?com|m\.?a\b", "master"),
-    (r"b\.?tech|bachelor of (?:technology|engineering|science|business|arts|computer)|b\.?e\b(?!n)|b\.?sc|b\.?com|b\.?b\.?a|b\.?c\.?a", "bachelor"),
-    (r"diploma", "diploma"),
+    (r"\bph\.?\s?d\b|doctor of philosophy", "phd"),
+    (
+        r"\bm(?:\.\s?)?tech\b|master of (?:technology|engineering|science|business|arts|computer|administration)|"
+        r"\bm\.?c\.?a\b|\bm(?:\.\s?)?s\b|\bm\.?sc\b|\bm\.?com\b|\bm\.?b\.?a\b|\bm\.?a\b|\bm\.?e\b",
+        "master",
+    ),
+    (
+        r"\bb(?:\.\s?)?tech\b|bachelor of (?:technology|engineering|science|business|arts|computer|administration)|"
+        r"\bb\.?c\.?a\b|\bb\.?e\b|\bb(?:\.\s?)?s\b|\bb\.?sc\b|\bb\.?com\b|\bb\.?b\.?a\b|\bb\.?a\b",
+        "bachelor",
+    ),
+    (r"\b(?:diploma|pg ?diploma)\b", "diploma"),
 ]
 _EDUCATION_LEVEL_RANK = {"none": 0, "diploma": 1, "bachelor": 2, "master": 3, "phd": 4}
 
@@ -24,8 +38,17 @@ _MONTHS = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
+_MONTHS_REV = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
+               7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
+
+_MONTHS_PAT = (
+    r"january|february|march|april|may|june|july|august|september|october|november|december|"
+    r"jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec"
+)
+_YEAR = r"(?:19|20)\d{2}"
 _DATE_RANGE_RE = re.compile(
-    r"([A-Za-z]{3,9})?\s*(\d{4})\s*[-–—to]+\s*([A-Za-z]{3,9})?\s*(\d{4}|present|current|till date|now)",
+    rf"(?P<sm>(?:{_MONTHS_PAT}))\s*(?P<sy>{_YEAR})?\s*[-–—/→]+\s*"
+    rf"(?:(?P<em>(?:{_MONTHS_PAT}))\s+)?(?P<ey>{_YEAR}|present|current|now|till\s*date|till now)",
     re.IGNORECASE,
 )
 _YEARS_CLAIM_RE = re.compile(r"(\d+(?:\.\d+)?)\s*\+?\s*years?", re.IGNORECASE)
@@ -38,6 +61,49 @@ _SECTION_HEADINGS = {
     "skills": r"(technical )?skills|technical proficienc(?:y|ies)|technologies",
     "summary": r"summary|profile|objective|about me",
 }
+
+# Role-title hints used to split experience section into jobs.
+_ROLE_SENIORITY = r"(?:senior|lead|junior|sr\.?|jr\.?|principal|staff|chief|associate|assistant|principal|chartered)?"
+_ROLE_KW = (
+    r"engineer|developer|scientist|analyst|manager|director|head|architect|consultant|designer|"
+    r"intern|specialist|administrator|coordinator|executive|officer|researcher|recruiter|trainer|"
+    r"supervisor|tester|programmer|trainee|founder|co-?founder|sde|freelancer|software|developer|"
+    r"data (?:scientist|engineer|analyst)|machine learning|devops|full ?stack|backend|frontend"
+)
+_ROLE_AT_RE = re.compile(
+    rf"^(?P<title>.+?)\s+(?:at|@)\s+(?P<company>[A-Za-z0-9&.,'\- ]+)$",
+    re.IGNORECASE,
+)
+_ROLE_HEAD_RE = re.compile(
+    rf"^(?:{_ROLE_SENIORITY})\s*(?:{_ROLE_KW})", re.IGNORECASE
+)
+_CITY_WORDS = re.compile(
+    r"\b(bengaluru|bangalore|hyderabad|delhi|noida|gurgaon|gurugram|pune|mumbai|chennai|"
+    r"kolkata|india|remote|hybrid|onsite|work from home)\b",
+    re.IGNORECASE,
+)
+_FIELD_RE = re.compile(
+    r"(?:\bin\s+|[,|]\s*)([A-Za-z0-9 &.'\/\-+]{2,40}?)(?=[,.]|\s+(?:from|at|university|college|institute|\)|$))",
+    re.IGNORECASE,
+)
+
+
+def _extract_institution(snippet: str) -> str | None:
+    """Institution name near an education mention (after 'from'/'at', else keyword phrase)."""
+    m = re.search(
+        r"(?:from|at)\s+([A-Z][A-Za-z0-9&.'\- ]*(?:University|Institute|College|School|Academy|IIT|NIT|IIIT)[A-Za-z0-9&.'\- ]*)",
+        snippet,
+        re.IGNORECASE,
+    )
+    if not m:
+        m = re.search(
+            r"([A-Z][A-Za-z0-9&.'\- ]{0,10}?(?:University|Institute|College|School|Academy|IIT|NIT|IIIT)[A-Za-z0-9&.'\- ]*)",
+            snippet,
+        )
+    if not m:
+        return None
+    cleaned = re.sub(r"[\s,;]+$", "", m.group(1)).strip()
+    return cleaned or None
 
 
 # ---------- Text extraction ----------
@@ -118,30 +184,20 @@ def _get_spacy():
     return _SPACY_NLP
 
 
-def _parse_education(text: str) -> tuple[list[dict], str]:
-    entries: list[dict] = []
-    highest = "none"
-    edu_section = _extract_section(text, "education") or text
-    for pattern, level in _EDUCATION_PATTERNS:
-        for m in re.finditer(pattern, edu_section, re.IGNORECASE):
-            degree = m.group(0).strip()
-            snippet = edu_section[max(0, m.start() - 40): m.end() + 120]
-            inst_m = re.search(
-                r"(?:college|university|institute|school|iit|nit|iiit)\b[^,\n]*",
-                snippet,
-                re.IGNORECASE,
-            )
-            year_m = re.search(r"\b(19|20)\d{2}\b", snippet)
-            entry = {
-                "degree": degree.upper(),
-                "institution": inst_m.group(0).strip() if inst_m else None,
-                "year": year_m.group(0) if year_m else None,
-            }
-            if entry not in entries:
-                entries.append(entry)
-            if _EDUCATION_LEVEL_RANK[level] > _EDUCATION_LEVEL_RANK[highest]:
-                highest = level
-    return entries, highest
+def _date_tuple(month: str | None, year: str | None, *, end: bool = False) -> tuple[int, int] | None:
+    if not year:
+        return None
+    if year.lower() in ("present", "current", "now", "till date", "till now"):
+        now = datetime.now()
+        return (now.year, now.month)
+    try:
+        y = int(year)
+    except (TypeError, ValueError):
+        return None
+    m = 12 if end else 1
+    if month:
+        m = _MONTHS.get(re.sub(r"\.$", "", month.lower())[:3], m)
+    return (y, m)
 
 
 def _months_between(start: tuple[int, int], end: tuple[int, int]) -> float:
@@ -153,23 +209,15 @@ def _sum_date_ranges(text: str) -> float:
     total = 0.0
     now = datetime.now()
     for m in _DATE_RANGE_RE.finditer(text):
-        sm, sy, em, ey = m.groups()
-        try:
-            start_year = int(sy)
-        except (TypeError, ValueError):
+        start = _date_tuple(m.group("sm"), m.group("sy"))
+        end = _date_tuple(m.group("em"), m.group("ey"), end=True)
+        if start is None or end is None:
             continue
-        start_month = _MONTHS.get((sm or "jan")[:3].lower(), 1)
-        if ey and ey.lower() in ("present", "current", "now"):
-            end_year, end_month = now.year, now.month
-        else:
-            try:
-                end_year = int(ey)
-            except (TypeError, ValueError):
-                continue
-            end_month = _MONTHS.get((em or "dec")[:3].lower(), 12)
-        if start_year < 1980 or end_year > now.year + 1 or end_year < start_year:
+        sy, _sm = start
+        ey, _em = end
+        if sy < 1980 or ey > now.year + 1 or ey < sy:
             continue
-        total += _months_between((start_year, start_month), (end_year, end_month))
+        total += _months_between(start, end)
     return total
 
 
@@ -193,8 +241,6 @@ def _parse_experience_years(text: str) -> float:
     # 3) If we only have a claimed figure, trust it; otherwise use the larger
     #    of the two signals but cap it so one stray date cannot explode it.
     if claim_years > 0 and range_years > 0:
-        # Prefer the range (more granular) but never exceed ~1.5x the claim,
-        # in case a duplicated/unrelated range inflated it.
         years = min(range_years, claim_years * 1.5)
     else:
         years = max(range_years, claim_years)
@@ -204,9 +250,7 @@ def _parse_experience_years(text: str) -> float:
 def _extract_section(text: str, section: str) -> str | None:
     head = _SECTION_HEADINGS[section]
     keys = sorted(_SECTION_HEADINGS.values())
-    pattern = re.compile(
-        rf"^(?:{head})\s*:?\s*$", re.IGNORECASE | re.MULTILINE
-    )
+    pattern = re.compile(rf"^(?:{head})\s*:?\s*$", re.IGNORECASE | re.MULTILINE)
     matches = list(pattern.finditer(text))
     if not matches:
         pattern_inline = re.compile(rf"^({head})\s*:\s*", re.IGNORECASE | re.MULTILINE)
@@ -221,9 +265,213 @@ def _extract_section(text: str, section: str) -> str | None:
     return body.strip()
 
 
+# ---------- Experience ----------
+
+def _is_bullet(raw: str) -> bool:
+    s = raw.strip()
+    return bool(re.match(r"^[•·‣▪◦\-*]", s) or re.match(r"^\d+[.)]", s))
+
+
+def _split_role(line: str) -> tuple[str | None, str | None]:
+    """Split a header line into (title, company); both optional."""
+    parts = [p.strip() for p in re.split(r"[|¦·]", line) if p.strip()]
+    if len(parts) == 1:
+        m = _ROLE_AT_RE.match(line)
+        if m:
+            return m.group("title").strip(), m.group("company").strip()
+        if "," in line and _ROLE_HEAD_RE.match(line):
+            title, _, company = line.partition(",")
+            return title.strip(), company.strip()
+        return line, None
+
+    non_dates = [
+        p for p in parts
+        if not _DATE_RANGE_RE.search(p) and not _CITY_WORDS.search(p)
+    ]
+    if not non_dates:
+        return parts[0], None
+    if len(non_dates) >= 2:
+        if _ROLE_HEAD_RE.match(non_dates[0]):
+            return non_dates[0], non_dates[1]
+        if len(parts) >= 3:
+            return non_dates[1], non_dates[0]
+        return non_dates[0], non_dates[1]
+    if _ROLE_HEAD_RE.match(non_dates[0]):
+        return non_dates[0], None
+    return None, non_dates[0]
+
+
+def _fmt_date(dm: re.Match, *, end: bool) -> str | None:
+    part = "em" if end else "sm"
+    year = dm.group("sy") if not end else dm.group("ey")
+    if not year:
+        return None
+    if end and dm.group("ey") and dm.group("ey").lower() in ("present", "current", "now"):
+        return "Present"
+    month = dm.group(part)
+    if not month:
+        return str(year)
+    mon = re.sub(r"\.$", "", month.lower())[:3]
+    return f"{_MONTHS_REV.get(_MONTHS.get(mon, 1))} {year}"
+
+
+def _looks_like_role_header(line: str, index: int, lines: list[str]) -> bool:
+    if _ROLE_AT_RE.match(line):
+        return True
+    if "|" in line:
+        return True
+    for nxt in lines[index + 1: index + 3]:
+        if not nxt:
+            continue
+        if _DATE_RANGE_RE.search(_clean_line(nxt)):
+            return len(line) <= 110
+    return len(line) <= 60 and bool(_ROLE_HEAD_RE.match(line))
+
+
+def _parse_experience(text: str) -> list[dict]:
+    section = _extract_section(text, "experience")
+    if not section:
+        return []
+
+    blocks: list[dict] = []
+    cur: dict | None = None
+    lines = [_clean_line(l) for l in section.splitlines()]
+
+    for i, raw in enumerate(lines):
+        line = _clean_line(raw)
+        if not line:
+            continue
+
+        dm = _DATE_RANGE_RE.search(line)
+
+        if _is_bullet(raw):
+            if cur is not None and cur["dates"] is not None:
+                cur["details"].append(line[:300])
+            continue
+
+        if dm:
+            if cur is None or cur["dates"] is not None:
+                title, company = _split_role(line)
+                cur = {"title": title, "company": company, "dates": dm, "details": []}
+                blocks.append(cur)
+            else:
+                cur["dates"] = dm
+                if cur["company"] is None:
+                    _t, company = _split_role(line)
+                    cur["company"] = company
+            continue
+
+        # non-bullet, non-date line
+        if _looks_like_role_header(line, i, lines):
+            if cur is not None:
+                blocks.append(cur)
+            title, company = _split_role(line)
+            cur = {"title": title, "company": company, "dates": None, "details": []}
+            continue
+
+        if cur is not None and cur["dates"] is not None:
+            cur["details"].append(line[:300])
+
+    if cur is not None:
+        blocks.append(cur)
+
+    return [_finalize_block(b) for b in blocks if b["title"] or b["company"] or b["details"]][:8]
+
+
+def _finalize_block(block: dict) -> dict:
+    dm = block["dates"]
+    start = end = None
+    duration_years = None
+    if dm:
+        st = _date_tuple(dm.group("sm"), dm.group("sy"))
+        en = _date_tuple(dm.group("em"), dm.group("ey"), end=True)
+        if st and en:
+            duration_years = round(_months_between(st, en) / 12, 1)
+        start = _fmt_date(dm, end=False)
+        end = _fmt_date(dm, end=True)
+    return {
+        "title": (block["title"] or None),
+        "company": (block["company"] or None),
+        "start_date": start,
+        "end_date": end,
+        "duration_years": duration_years,
+        "details": block["details"][:12],
+    }
+
+
+# ---------- Education ----------
+
+def _parse_education(text: str) -> tuple[list[dict], str]:
+    entries: list[dict] = []
+    highest = "none"
+    edu_section = _extract_section(text, "education") or text
+    seen: set[tuple[str, str]] = set()
+
+    for pattern, level in _EDUCATION_PATTERNS:
+        for m in re.finditer(pattern, edu_section, re.IGNORECASE):
+            degree = m.group(0).strip().rstrip(",").strip()
+            snippet = edu_section[max(0, m.start() - 40): m.end() + 160]
+
+            inst_m = _extract_institution(snippet)
+            institution = inst_m if inst_m else None
+
+            local = snippet[m.end(): m.end() + 50]
+            field_m = _FIELD_RE.search(local)
+            field = field_m.group(1).strip() if field_m else None
+            if field and len(field) < 3:
+                field = None
+
+            year_m = re.search(r"\b(19|20)\d{2}\b", snippet)
+            entry = {
+                "degree": degree.upper(),
+                "institution": institution,
+                "year": year_m.group(0) if year_m else None,
+                "field_of_study": field,
+                "level": level,
+            }
+            key = (degree.lower(), institution or "")
+            if key in seen:
+                continue
+            seen.add(key)
+            entries.append(entry)
+            if _EDUCATION_LEVEL_RANK[level] > _EDUCATION_LEVEL_RANK[highest]:
+                highest = level
+    return entries, highest
+
+
+# ---------- Summary ----------
+
+def _extract_summary(text: str) -> str | None:
+    section = _extract_section(text, "summary")
+    if section:
+        cleaned = re.sub(r"\s+", " ", section).strip()
+        return cleaned[:800] if cleaned else None
+    for line in text.splitlines():
+        line = _clean_line(line)
+        if 50 < len(line) < 500 and "@" not in line:
+            if not re.match(r"^(?:{})".format("|".join(_SECTION_HEADINGS.values())), line, re.IGNORECASE):
+                return re.sub(r"\s+", " ", line).strip()[:800]
+    return None
+
+
+# ---------- Entry point ----------
+
 def parse_resume(raw_text: str) -> dict:
-    """Parse resume *raw_text* into structured fields."""
+    """Parse resume *raw_text* into structured fields (LLM-first, heuristic fallback)."""
     text = raw_text.replace("\r\n", "\n")
+
+    from app.ai.llm import extract_resume_with_llm, is_llm_available
+
+    if is_llm_available():
+        try:
+            return extract_resume_with_llm(text)
+        except Exception as exc:  # network / quota / bad response -> offline fallback
+            print(f"[parser] LLM parsing failed ({exc}); using heuristic parser")
+
+    return _parse_resume_heuristic(text)
+
+
+def _parse_resume_heuristic(text: str) -> dict:
     email_m = _EMAIL_RE.search(text)
     phone_m = _PHONE_RE.search(text.replace("\u00a0", " "))
     phone = phone_m.group(0).strip() if phone_m else None
@@ -240,7 +488,6 @@ def parse_resume(raw_text: str) -> dict:
 
     skills = extract_skills(skills_section if skills_section else text)
 
-    summary_section = _extract_section(text, "summary")
     location_m = re.search(
         r"(?:location|address)\s*[:\-]\s*([A-Za-z .,'-]{3,80})", text, re.IGNORECASE
     )
@@ -267,23 +514,15 @@ def parse_resume(raw_text: str) -> dict:
                 certifications.append(clean[:200])
         certifications = certifications[:15]
 
-    experience_body = _extract_section(text, "experience")
-    experience = []
-    if experience_body:
-        for chunk in re.split(r"\n(?=[•\-*]|\d+\.)", experience_body)[:10]:
-            clean = _clean_line(chunk)
-            if len(clean) > 15:
-                experience.append({"detail": clean[:500]})
-
     return {
         "candidate_name": _guess_name(text),
         "email": email_m.group(0) if email_m else None,
         "phone": phone,
         "location": location_m.group(1).strip() if location_m else None,
-        "summary": (summary_section[:600] if summary_section else None),
+        "summary": _extract_summary(text),
         "skills": skills,
         "education": education_entries,
-        "experience": experience,
+        "experience": _parse_experience(text),
         "projects": projects,
         "certifications": certifications,
         "total_experience_years": exp_years,

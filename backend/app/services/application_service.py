@@ -9,7 +9,7 @@ from app.ai.matcher import compute_match
 from app.core.enums import ApplicationStatus
 from app.models import Application, Job, Resume, User
 from app.services.job_service import ensure_job_owner
-from app.services.resume_service import get_resume_for_user
+from app.services.resume_service import _build_resume_context, get_resume_for_user
 
 
 def apply_to_job(db: Session, user: User, job: Job, cover_letter: str | None) -> Application:
@@ -40,6 +40,7 @@ def apply_to_job(db: Session, user: User, job: Job, cover_letter: str | None) ->
         required_skills=job.required_skills or [],
         min_experience_years=job.min_experience_years or 0.0,
         education_level=job.education_level,
+        resume_context=_build_resume_context(resume),
     )
 
     application = Application(
