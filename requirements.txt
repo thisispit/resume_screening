@@ -1,0 +1,25 @@
+# Vercel Serverless Function requirements
+fastapi>=0.115
+uvicorn[standard]>=0.34
+python-multipart>=0.0.20
+
+# Database
+SQLAlchemy>=2.0.40
+alembic>=1.15
+psycopg[binary]>=3.2
+
+# Validation & Settings
+pydantic>=2.11
+pydantic-settings>=2.8
+email-validator>=2.2
+
+# Auth & Security
+PyJWT>=2.10
+bcrypt>=4.3
+
+# Document Parsing
+PyMuPDF>=1.26
+python-docx>=1.1
+
+# HTTP Client
+httpx>=0.28

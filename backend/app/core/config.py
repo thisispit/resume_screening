@@ -63,7 +63,12 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [o.strip() for o in self.BACKEND_CORS_ORIGINS.split(",") if o.strip()]
+        import os
+        origins = [o.strip() for o in self.BACKEND_CORS_ORIGINS.split(",") if o.strip()]
+        if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+            if "*" not in origins:
+                origins.append("*")
+        return origins
 
     @property
     def allowed_extensions(self) -> list[str]:
@@ -74,10 +79,13 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL")
     @classmethod
     def _fix_driver(cls, v: str) -> str:
-        # Accept plain postgresql:// URLs and force the psycopg (v3) driver.
+        import os
+        if (os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")) and "localhost" in v:
+            return "sqlite:////tmp/app.db"
         if v.startswith("postgresql://"):
             return v.replace("postgresql://", "postgresql+psycopg://", 1)
         return v
+
 
 
 @lru_cache

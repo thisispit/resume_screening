@@ -30,11 +30,26 @@ def _ensure_admin() -> None:
             db.commit()
 
 
+_db_initialized = False
+
+
+def init_db() -> None:
+    """Initialize database tables and admin account (idempotent)."""
+    global _db_initialized
+    if not _db_initialized:
+        upload_dir = getattr(settings, "effective_upload_dir", settings.UPLOAD_DIR)
+        Path(upload_dir).mkdir(parents=True, exist_ok=True)
+        try:
+            Base.metadata.create_all(bind=engine)
+            _ensure_admin()
+        except Exception as exc:
+            print(f"[main] init_db exception: {exc}")
+        _db_initialized = True
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
-    Base.metadata.create_all(bind=engine)  # idempotent; Alembic migrations are preferred
-    _ensure_admin()
+    init_db()
     yield
 
 
@@ -61,6 +76,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def ensure_db_middleware(request, call_next):
+    if not _db_initialized:
+        init_db()
+    return await call_next(request)
+
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 

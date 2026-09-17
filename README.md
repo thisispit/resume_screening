@@ -72,6 +72,29 @@ Interactive API docs: http://localhost:8000/api/v1/docs
 - Candidate ranking
 - AI-powered semantic matching
 
+## Deploying on Vercel
+
+This repository is pre-configured for one-click full-stack deployment on **Vercel** (Vite React frontend + FastAPI Python serverless functions).
+
+### Deploy via Vercel CLI
+```bash
+npm install -g vercel
+vercel
+```
+
+### Deploy via Vercel Dashboard (GitHub)
+1. Push this project to GitHub.
+2. Go to [Vercel Dashboard](https://vercel.com/new) and import the repository.
+3. Keep default settings (`vercel.json` automatically configures build & backend serverless routing).
+4. (Optional) Set Environment Variables in Vercel settings:
+   - `DATABASE_URL`: PostgreSQL connection string (e.g. from Neon, Supabase, or Vercel Postgres). If omitted, falls back to SQLite for instant preview.
+   - `SECRET_KEY`: Custom secret key for JWT tokens.
+   - `LLM_API_KEY`: API key for Groq/OpenAI/Gemini/OpenRouter (optional for AI feature boosting).
+5. Click **Deploy**.
+
+---
+
 ## Note
 
 This is a recruitment decision-support tool. It does not make hiring decisions.
+
