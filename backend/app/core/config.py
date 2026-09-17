@@ -32,12 +32,13 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # Uploads
+    # Uploads — Vercel serverless functions can only write to /tmp
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_SIZE_MB: int = 5
     ALLOWED_EXTENSIONS: str = ".pdf,.docx"
 
-    # AI
+    # AI — set to empty string to disable and use fallback (required on Vercel
+    # where sentence-transformers/spacy/torch are not bundled due to size limits)
     SENTENCE_TRANSFORMER_MODEL: str = "all-MiniLM-L6-v2"
     SPACY_MODEL: str = "en_core_web_sm"
 
@@ -84,6 +85,24 @@ class Settings(BaseSettings):
             return "sqlite:////tmp/app.db"
         if v.startswith("postgresql://"):
             return v.replace("postgresql://", "postgresql+psycopg://", 1)
+        return v
+
+    @field_validator("SENTENCE_TRANSFORMER_MODEL", "SPACY_MODEL", mode="before")
+    @classmethod
+    def _disable_heavy_models_on_vercel(cls, v: str) -> str:
+        """Force ML models off on Vercel to avoid missing-library errors."""
+        import os
+        if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+            return ""
+        return v
+
+    @field_validator("UPLOAD_DIR", mode="before")
+    @classmethod
+    def _fix_upload_dir(cls, v: str) -> str:
+        """Use /tmp on Vercel — the only writable path in serverless functions."""
+        import os
+        if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+            return "/tmp/uploads"
         return v
 
 

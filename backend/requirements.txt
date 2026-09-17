@@ -1,6 +1,6 @@
 # Web framework
 fastapi>=0.115
-uvicorn[standard]>=0.34
+uvicorn>=0.34
 python-multipart>=0.0.20
 
 # Database
@@ -17,15 +17,16 @@ email-validator>=2.2
 PyJWT>=2.10
 bcrypt>=4.3
 
-# NLP / AI
-spacy>=3.8,<4
-scikit-learn>=1.6
-sentence-transformers>=4.0
-
 # Resume parsing
 PyMuPDF>=1.26
 python-docx>=1.1
 
-# Testing
-pytest>=8.3
+# HTTP client (used internally)
 httpx>=0.28
+
+# NOTE: sentence-transformers, spacy, and scikit-learn are intentionally
+# excluded here because they pull in PyTorch + CUDA (~5 GB) which exceeds
+# Vercel's 225 MB function bundle limit. The app automatically falls back to
+# fast fuzzy-string matching (SequenceMatcher) and the heuristic parser when
+# these libraries are unavailable — functionality is fully preserved.
+# Install them locally (backend/requirements.txt) for local dev with full AI.
