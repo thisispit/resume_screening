@@ -77,25 +77,10 @@ body {
   text-rendering: optimizeLegibility;
   background-color: var(--bg-0);
   background-image:
-    /* fine noise */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
-    /* faint grid */
-    repeating-linear-gradient(0deg, rgba(63, 74, 44, 0.055) 0 1px, transparent 1px 56px),
-    repeating-linear-gradient(90deg, rgba(63, 74, 44, 0.055) 0 1px, transparent 1px 56px),
-    /* olive glow top-left */
-    radial-gradient(900px 620px at 10% -8%, rgba(89, 102, 58, 0.2), transparent 62%),
-    /* warm gold glow right */
-    radial-gradient(800px 560px at 97% 12%, rgba(197, 168, 90, 0.24), transparent 60%),
-    /* sage glow bottom-left */
-    radial-gradient(900px 600px at -5% 105%, rgba(135, 150, 90, 0.22), transparent 62%),
-    /* soft gold center-bottom */
-    radial-gradient(700px 420px at 60% 115%, rgba(197, 168, 90, 0.16), transparent 65%),
-    /* vignette */
-    radial-gradient(130% 95% at 50% 42%, transparent 60%, rgba(70, 80, 44, 0.14) 100%),
-    /* base */
-    linear-gradient(180deg, #F7F8EF 0%, #EFF1E2 48%, #E6EAD5 100%);
-  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, fixed, fixed, scroll;
-  background-size: 160px 160px, auto, auto, auto, auto, auto, auto, auto, auto;
+    radial-gradient(800px circle at 15% 10%, rgba(135, 150, 90, 0.12), transparent 60%),
+    radial-gradient(800px circle at 85% 15%, rgba(197, 168, 90, 0.14), transparent 60%),
+    linear-gradient(180deg, #F7F8EF 0%, #EFF1E2 100%);
+  background-repeat: no-repeat;
 }
 
 #root {

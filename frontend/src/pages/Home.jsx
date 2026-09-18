@@ -3,67 +3,52 @@ import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 
 const searchSuggestions = [
-  'Data Scientist', 'Data Analyst', 'Data Engineering',
-  'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
-  'Software Engineer', 'Software Developer',
-  'UI/UX Designer', 'Product Designer', 'Graphic Designer',
-  'Mobile Developer', 'Android Developer', 'iOS Developer',
-  'DevOps Engineer', 'Cloud Engineer', 'System Administrator',
-  'Machine Learning Engineer', 'AI Engineer', 'Deep Learning',
-  'Cybersecurity Analyst', 'Network Engineer', 'Security Engineer',
-  'Project Manager', 'Business Analyst', 'Product Manager',
-  'QA Engineer', 'Test Engineer', 'Automation Engineer',
-  'Database Administrator', 'SQL Developer', 'Data Warehouse',
-  'Blockchain Developer', 'Web Developer', 'Python Developer',
-  'Java Developer', 'React Developer', 'Angular Developer',
-  'Node.js Developer', 'Django Developer', 'Flask Developer',
-  'AWS Engineer', 'Azure Engineer', 'GCP Engineer',
-  'Technical Writer', 'Solutions Architect', 'IT Consultant'
+  'Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+  'Data Scientist', 'Data Analyst', 'DevOps Engineer', 'Machine Learning Engineer',
+  'UI/UX Designer', 'Cloud Engineer', 'Product Manager', 'Solutions Architect'
 ]
 
 const howItWorks = [
-  { num: '01', title: 'Upload Resume', desc: 'Upload your resume in PDF format. Our AI extracts all relevant information automatically.', icon: '📄' },
-  { num: '02', title: 'AI Analysis', desc: 'Our advanced AI analyzes your skills, experience, education, and qualifications.', icon: '🤖' },
-  { num: '03', title: 'Smart Matching', desc: 'Get matched with the best job opportunities based on your profile.', icon: '🎯' },
-  { num: '04', title: 'Get Hired', desc: 'Apply with confidence using AI-powered resume feedback and interview prep.', icon: '🚀' }
-]
-
-const bigFeatures = [
   {
-    icon: '📄', title: 'Resume Upload & Analysis', shape: 'hexagon',
-    desc: 'Upload your resume and our AI will instantly extract and analyze all key information including skills, experience, education, and certifications.',
-    features: ['PDF text extraction', 'Skill identification', 'Experience parsing', 'Education verification'],
-    link: '/upload', linkText: 'Upload Your Resume'
+    num: '01',
+    title: 'Resume Ingestion',
+    desc: 'Upload PDF or DOCX documents. Personal details, career history, and credentials are structured cleanly.'
   },
   {
-    icon: '📊', title: 'ATS Score & Optimization', shape: 'diamond',
-    desc: 'See your Applicant Tracking System score and get actionable suggestions to improve your resume for better visibility to recruiters.',
-    features: ['Real-time ATS scoring', 'Keyword optimization', 'Format suggestions', 'Industry-specific tips'],
-    link: '/dashboard', linkText: 'Check Your Score'
+    num: '02',
+    title: 'Competency Analysis',
+    desc: 'Extracts technical skills, verifies career duration, and normalizes educational backgrounds.'
+  },
+  {
+    num: '03',
+    title: 'Criteria-Based Matching',
+    desc: 'Evaluates candidates against verified job requirements using explainable, weighted compatibility scoring.'
+  },
+  {
+    num: '04',
+    title: 'Structured Decisions',
+    desc: 'Candidates track submission status; recruiters screen ranked talent with transparent evaluation criteria.'
   }
 ]
 
-const smallFeatures = [
-  { icon: '🎯', title: 'Skill Matching', desc: 'Match your skills with job requirements instantly.', link: '/dashboard', shape: 'circle' },
-  { icon: '📈', title: 'Candidate Ranking', desc: 'See how you rank against other applicants.', link: '/dashboard', shape: 'triangle' },
-  { icon: '💬', title: 'AI Feedback', desc: 'Get personalized resume improvement tips.', link: '/upload', shape: 'star' },
-  { icon: '🎙️', title: 'Interview Prep', desc: 'Generate AI interview questions for your role.', link: '/dashboard', shape: 'pentagon' }
-]
-
-const jobCategories = [
-  { icon: '💻', name: 'Software Engineering', count: 245, color: '#0f2155', topSkills: ['Java', 'Python', 'React'] },
-  { icon: '📊', name: 'Data Science', count: 183, color: '#152c6e', topSkills: ['Python', 'SQL', 'TensorFlow'] },
-  { icon: '🎨', name: 'UI/UX Design', count: 127, color: '#4a7dff', topSkills: ['Figma', 'Adobe XD', 'CSS'] },
-  { icon: '📱', name: 'Mobile Development', count: 98, color: '#2a4a9f', topSkills: ['React Native', 'Flutter', 'Swift'] },
-  { icon: '☁️', name: 'Cloud Computing', count: 156, color: '#1e3a8a', topSkills: ['AWS', 'Azure', 'Docker'] },
-  { icon: '🔒', name: 'Cybersecurity', count: 89, color: '#0a1640', topSkills: ['Network Security', 'Penetration Testing', 'SIEM'] }
+const coreCapabilities = [
+  {
+    title: 'Applicant Tracking System (ATS) Readiness',
+    desc: 'Evaluate resume compatibility with industry standard ATS parsers. Get actionable keyword and formatting suggestions before applying.',
+    points: ['Real-time ATS scoring index', 'Keyword density detection', 'Career duration calculation', 'Section structure verification']
+  },
+  {
+    title: 'Explainable Candidate Ranking',
+    desc: 'Screen candidates using weighted criteria: technical skill overlap, semantic role alignment, experience duration, and degree requirements.',
+    points: ['Objective multi-factor scoring', 'Direct skill-gap identification', 'Custom status pipelines', 'Exportable candidate summaries']
+  }
 ]
 
 const recommendedJobs = [
-  { title: 'Senior Frontend Developer', company: 'TechCorp Inc.', location: 'Bangalore, India', salary: '₹12-18 LPA', skills: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'], type: 'Full-time', posted: '2 days ago', logo: '🏢' },
-  { title: 'Data Scientist', company: 'DataFlow Solutions', location: 'Hyderabad, India', salary: '₹10-16 LPA', skills: ['Python', 'Machine Learning', 'SQL', 'TensorFlow'], type: 'Full-time', posted: '1 day ago', logo: '🔬' },
-  { title: 'UI/UX Designer', company: 'DesignStudio', location: 'Mumbai, India', salary: '₹8-14 LPA', skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping'], type: 'Full-time', posted: '3 days ago', logo: '🎨' },
-  { title: 'DevOps Engineer', company: 'CloudFirst Tech', location: 'Pune, India', salary: '₹14-22 LPA', skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform'], type: 'Full-time', posted: '5 hours ago', logo: '☁️' }
+  { id: 'sample-1', title: 'Senior Full-Stack Engineer', company_name: 'TechCorp Solutions', location: 'Remote / Bangalore', employment_type: 'Full-time', required_skills: ['React', 'Python', 'FastAPI', 'PostgreSQL'], salary_min: 14, salary_max: 22 },
+  { id: 'sample-2', title: 'Data Scientist & ML Engineer', company_name: 'DataFlow Analytics', location: 'Hyderabad', employment_type: 'Full-time', required_skills: ['Python', 'Machine Learning', 'SQL', 'TensorFlow'], salary_min: 12, salary_max: 18 },
+  { id: 'sample-3', title: 'Lead DevOps Engineer', company_name: 'CloudFirst Networks', location: 'Pune', employment_type: 'Full-time', required_skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform'], salary_min: 16, salary_max: 24 },
+  { id: 'sample-4', title: 'Product UI/UX Designer', company_name: 'DesignStudio Labs', location: 'Mumbai', employment_type: 'Full-time', required_skills: ['Figma', 'Design Systems', 'User Research'], salary_min: 10, salary_max: 16 }
 ]
 
 function Home() {
@@ -90,7 +75,7 @@ function Home() {
   useEffect(() => {
     api('/jobs')
       .then(setLiveJobs)
-      .catch(() => { /* backend may be down; fall back to static */ })
+      .catch(() => {})
   }, [])
 
   const handleSearchChange = (e) => {
@@ -100,7 +85,7 @@ function Home() {
       const filtered = searchSuggestions.filter(s =>
         s.toLowerCase().includes(value.toLowerCase())
       )
-      setSuggestions(filtered.slice(0, 8))
+      setSuggestions(filtered.slice(0, 6))
       setShowSuggestions(true)
     } else {
       setSuggestions([])
@@ -138,370 +123,245 @@ function Home() {
     runSearch()
   }
 
+  const displayJobs = searchResults || (liveJobs.length > 0 ? liveJobs : recommendedJobs)
+
   return (
     <div className="home-page">
-
-      {/* Decorative Background Shapes */}
-      <div className="home-decor">
-        <div className="deco-circle deco-circle-1"></div>
-        <div className="deco-circle deco-circle-2"></div>
-        <div className="deco-circle deco-circle-3"></div>
-        <div className="deco-blob deco-blob-1"></div>
-        <div className="deco-blob deco-blob-2"></div>
-        <div className="deco-wave"></div>
-      </div>
-
-      {/* Redesigned Split Hero Section with Glassmorphic Preview Cards */}
+      {/* Hero Section */}
       <section className="hero-section hero-split">
         <div className="hero-left">
           <div className="hero-badge">
             <span className="badge-dot"></span>
-            AI-Powered Resume Screening & Job Matching
+            Automated Candidate Screening & Job Matching
           </div>
           <h1>
-            Match Resumes to Jobs <br />
-            <span className="hero-highlight">With Explainable AI</span>
+            Recruitment Built for <br />
+            <span className="hero-highlight">Clarity and Precision.</span>
           </h1>
           <p className="hero-subtitle">
-            Upload your resume for instant ATS readiness scoring, automatic skill extraction, and personalized job matching. Recruiters screen and rank applicants in seconds.
+            Analyze qualifications, extract technical competencies, and generate objective match scores based on real job requirements.
           </p>
 
           <div className="hero-cta-row">
             <Link to="/upload" className="hero-primary-btn">
-              <span>📤 Upload Resume Free</span>
-              <span>→</span>
+              Submit Resume for Review →
             </Link>
             <Link to="/post-job" className="hero-secondary-btn">
-              <span>🏢 Post a Job (Recruiters)</span>
+              Post an Opening
             </Link>
           </div>
 
           <div className="search-container" ref={searchRef}>
             <form className="search-box" onSubmit={handleSearch}>
-              <span className="search-icon">🔍</span>
+              <span className="search-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </span>
               <input
                 type="text"
-                placeholder="Search jobs by title or skill (e.g. React, Python, ML)..."
+                placeholder="Search openings by role or skill (e.g. React, Python, Data Science)..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
                 className="search-input"
               />
-              <button type="submit" className="search-btn">Search Jobs</button>
+              <button type="submit" className="search-btn">Search</button>
             </form>
+
             {showSuggestions && suggestions.length > 0 && (
               <div className="search-suggestions">
                 {suggestions.map((s, i) => (
                   <div key={i} className="suggestion-item" onClick={() => handleSuggestionClick(s)}>
-                    <span className="suggestion-icon">🔍</span>
                     <span className="suggestion-text">{s}</span>
                   </div>
                 ))}
               </div>
             )}
+
             {searchResults && (
               <div className={`search-feedback ${searchResults.length === 0 ? 'empty' : ''}`}>
                 {searchResults.length > 0
-                  ? `✓ Found ${searchResults.length} job${searchResults.length > 1 ? 's' : ''} for "${searchQuery}". Scrolling to results below.`
-                  : `No jobs found for "${searchQuery}". Try a different keyword.`}
+                  ? `Showing ${searchResults.length} matching role${searchResults.length > 1 ? 's' : ''} for "${searchQuery}".`
+                  : `No positions found matching "${searchQuery}".`}
               </div>
             )}
+
             {searchError && (
               <div className="search-feedback empty">
-                ⚠️ {searchError}
+                {searchError}
               </div>
             )}
           </div>
 
           <div className="hero-tags">
-            <span className="hero-tags-label" style={{ fontWeight: 700, color: '#64748b', marginRight: '0.3rem' }}>Popular:</span>
-            {['Frontend Developer', 'Data Scientist', 'Python Developer', 'DevOps Engineer', 'ML Engineer'].map(tag => (
+            <span className="hero-tags-label">Popular Searches:</span>
+            {['Frontend Developer', 'Data Scientist', 'Python Developer', 'DevOps Engineer'].map(tag => (
               <span key={tag} className="tag" onClick={() => handleSuggestionClick(tag)}>{tag}</span>
             ))}
           </div>
         </div>
 
-        {/* Hero Right: Interactive Glassmorphic Cards Stack */}
+        {/* Hero Right: Clean Editorial Evaluation Showcase */}
         <div className="hero-right">
           <div className="hero-cards-stage">
-            {/* Card 1: ATS Live Score */}
-            <div className="hero-glass-card hgc-main">
-              <div className="hgc-header">
-                <div className="hgc-title-wrap">
-                  <span className="hgc-pill">ATS Score Visualizer</span>
-                  <h4>Senior Full-Stack Engineer</h4>
+            <div className="hero-editorial-card">
+              <div className="hec-top">
+                <div>
+                  <span className="hec-eyebrow">Candidate Evaluation</span>
+                  <h4>Alex Morgan</h4>
+                  <p className="hec-role">Senior Full-Stack Developer · 6.5 yrs exp</p>
                 </div>
-                <div className="hgc-score-circle">
-                  <span className="hgc-score-val">94%</span>
-                  <span className="hgc-score-lbl">ATS Ready</span>
+                <div className="hec-score-badge">
+                  <span className="hec-score-val">92%</span>
+                  <span className="hec-score-sub">Match Index</span>
                 </div>
               </div>
 
-              <div className="hgc-skills">
-                <span className="hgc-skill-tag matched">✓ React</span>
-                <span className="hgc-skill-tag matched">✓ Python</span>
-                <span className="hgc-skill-tag matched">✓ FastAPI</span>
-                <span className="hgc-skill-tag matched">✓ PostgreSQL</span>
-                <span className="hgc-skill-tag missing">✗ AWS</span>
+              <div className="hec-skills-list">
+                <span className="hec-tag matched">React.js</span>
+                <span className="hec-tag matched">Python</span>
+                <span className="hec-tag matched">FastAPI</span>
+                <span className="hec-tag matched">PostgreSQL</span>
+                <span className="hec-tag matched">System Design</span>
+                <span className="hec-tag missing">AWS Cloud</span>
               </div>
 
-              <div className="hgc-bars">
-                <div className="hgc-bar-row">
-                  <span>Skills Overlap</span>
-                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '95%', background: '#10b981' }}></div></div>
+              <div className="hec-metrics">
+                <div className="hec-metric-row">
+                  <span>Skills Alignment</span>
+                  <div className="hec-track"><div className="hec-bar" style={{ width: '95%' }}></div></div>
                   <strong>95%</strong>
                 </div>
-                <div className="hgc-bar-row">
-                  <span>Semantic Fit</span>
-                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '92%', background: '#3b82f6' }}></div></div>
-                  <strong>92%</strong>
+                <div className="hec-metric-row">
+                  <span>Relevant Experience</span>
+                  <div className="hec-track"><div className="hec-bar" style={{ width: '88%' }}></div></div>
+                  <strong>88%</strong>
                 </div>
-                <div className="hgc-bar-row">
-                  <span>Experience</span>
-                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '90%', background: '#8b5cf6' }}></div></div>
-                  <strong>90%</strong>
+                <div className="hec-metric-row">
+                  <span>Credential Verification</span>
+                  <div className="hec-track"><div className="hec-bar" style={{ width: '100%' }}></div></div>
+                  <strong>100%</strong>
                 </div>
               </div>
-            </div>
 
-            {/* Card 2: Floating Candidate Match Badge */}
-            <div className="hero-glass-card hgc-float-1">
-              <div className="hgc-float-icon">⭐</div>
-              <div className="hgc-float-info">
-                <strong>Rank #1 Match</strong>
-                <span>Shortlisted for TechCorp</span>
-              </div>
-              <span className="hgc-float-badge">96% Fit</span>
-            </div>
-
-            {/* Card 3: Live Stats Floating Pill */}
-            <div className="hero-glass-card hgc-float-2">
-              <span className="hgc-live-dot"></span>
-              <div className="hgc-float-info">
-                <strong>Instant AI Parsing</strong>
-                <span>&lt; 1.2s extraction speed</span>
+              <div className="hec-footer">
+                <span className="hec-status-pill">Shortlisted for Review</span>
+                <span className="hec-time">Updated Today</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats Section */}
       <section className="stats-section">
-        <div className="stats-bg-shape"></div>
         {[
-          { num: '10K+', label: 'Resumes Analyzed', icon: '📄' },
-          { num: '5K+', label: 'Jobs Matched', icon: '💼' },
-          { num: '95%', label: 'Accuracy Rate', icon: '✅' },
-          { num: '500+', label: 'Companies', icon: '🏢' }
+          { num: '10,000+', label: 'Resumes Screened' },
+          { num: '5,000+', label: 'Successful Matches' },
+          { num: '96.5%', label: 'Evaluation Consistency' },
+          { num: '500+', label: 'Hiring Companies' }
         ].map((s, i) => (
           <div key={i} className="stat-item">
-            <span className="stat-icon">{s.icon}</span>
             <span className="stat-number">{s.num}</span>
             <span className="stat-label">{s.label}</span>
           </div>
         ))}
       </section>
 
-      {/* How It Works */}
+      {/* Workflow Section */}
       <section className="how-it-works-section">
-        <div className="how-it-works-bg"></div>
-        <div className="how-it-works-left">
-          <div className="section-badge">How It Works</div>
-          <h2 className="section-title">Get Started in 4 Simple Steps</h2>
-          <div className="steps-list">
-            {howItWorks.map((step, i) => (
-              <div key={i} className="step-item">
-                <div className="step-left">
-                  <div className="step-num">{step.num}</div>
-                  {i < howItWorks.length - 1 && <div className="step-line"></div>}
-                </div>
-                <div className="step-right">
-                  <span className="step-icon">{step.icon}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="how-it-works-header">
+          <div className="section-badge">Workflow</div>
+          <h2 className="section-title">Structured 4-Step Screening Pipeline</h2>
+          <p className="section-subtitle">
+            Designed for transparent, objective evaluations without black-box complexity.
+          </p>
         </div>
-        <div className="how-it-works-right">
-          <div className="visual-cards-stack">
-            <div className="visual-card vc-1"><span>📄</span><p>Upload</p></div>
-            <div className="visual-card vc-2"><span>🤖</span><p>Analyze</p></div>
-            <div className="visual-card vc-3"><span>🎯</span><p>Match</p></div>
-            <div className="visual-card vc-4"><span>🚀</span><p>Hired</p></div>
-          </div>
-          <div className="visual-shapes">
-            <div className="v-shape v-shape-1"></div>
-            <div className="v-shape v-shape-2"></div>
-            <div className="v-shape v-shape-3"></div>
-          </div>
+
+        <div className="steps-grid">
+          {howItWorks.map((step, i) => (
+            <div key={i} className="step-card">
+              <div className="step-card-num">{step.num}</div>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Features */}
-      <section className="features-section">
-        <div className="features-bg-shapes">
-          <div className="f-shape f-shape-1"></div>
-          <div className="f-shape f-shape-2"></div>
-          <div className="f-shape f-shape-3"></div>
+      {/* Capabilities Section */}
+      <section className="capabilities-section">
+        <div className="cap-header">
+          <div className="section-badge">Platform Capabilities</div>
+          <h2 className="section-title">Engineered for Candidates and Recruitment Teams</h2>
         </div>
-        <div className="section-badge">Features</div>
-        <h2 className="section-title">Powerful Features</h2>
-        <p className="section-subtitle">Everything you need to land your dream job</p>
 
-        <div className="big-features">
-          {bigFeatures.map((feature, i) => (
-            <div key={i} className={`big-feature-card bfc-${feature.shape}`}>
-              <div className="bfc-glow"></div>
-              <div className="bfc-shape-icon">
-                <span>{feature.icon}</span>
-                <div className={`shape-bg shape-${feature.shape}`}></div>
-              </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
-              <ul>
-                {feature.features.map((f, j) => (
-                  <li key={j}>✓ {f}</li>
+        <div className="cap-grid">
+          {coreCapabilities.map((cap, i) => (
+            <div key={i} className="cap-card">
+              <h3>{cap.title}</h3>
+              <p>{cap.desc}</p>
+              <ul className="cap-points">
+                {cap.points.map((pt, j) => (
+                  <li key={j}>✓ {pt}</li>
                 ))}
               </ul>
-              <Link to={feature.link} className="card-link">{feature.linkText} →</Link>
-            </div>
-          ))}
-        </div>
-
-        <div className="small-features">
-          {smallFeatures.map((feature, i) => (
-            <div key={i} className={`small-feature-card sfc-${feature.shape}`}>
-              <div className="sfc-icon-wrap">
-                <span className="sfc-icon">{feature.icon}</span>
-                <div className={`sfc-shape sfc-shape-${feature.shape}`}></div>
-              </div>
-              <h4>{feature.title}</h4>
-              <p>{feature.desc}</p>
-              <Link to={feature.link} className="small-card-link">Learn More →</Link>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Categories + Jobs */}
-      <section className="explore-section">
-        <div className="explore-bg">
-          <div className="exp-shape exp-shape-1"></div>
-          <div className="exp-shape exp-shape-2"></div>
+      {/* Jobs Listing Section */}
+      <section className="jobs-section" ref={resultsRef}>
+        <div className="jobs-section-header">
+          <div>
+            <div className="section-badge">Opportunities</div>
+            <h2 className="section-title">Open Positions</h2>
+            <p className="section-subtitle">Explore positions and submit your resume for automated compatibility scoring.</p>
+          </div>
+          <Link to="/upload" className="section-header-link">Submit Resume →</Link>
         </div>
-        <div className="explore-container">
-          <div className="categories-panel">
-            <div className="cp-header">
-              <div className="section-badge section-badge-light">Categories</div>
-              <h2>Popular Job Categories</h2>
-              <p>Explore opportunities across various domains</p>
-            </div>
-            <div className="cat-list">
-              {jobCategories.map((cat, i) => (
-                <div key={i} className="cat-item" style={{ '--cat-color': cat.color }}>
-                  <span className="cat-item-icon">{cat.icon}</span>
-                  <div className="cat-item-info">
-                    <h4>{cat.name}</h4>
-                    <span>{cat.count} open positions</span>
-                  </div>
-                  <div className="cat-item-bar">
-                    <div className="cat-item-bar-fill" style={{ width: `${(cat.count / 250) * 100}%` }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="categories-cta">
-              <span className="categories-count-big">898+</span>
-              <span className="categories-label">Total Open Positions</span>
-            </div>
-          </div>
 
-          <div className="jobs-panel" ref={resultsRef}>
-            <div className="jobs-panel-header">
-              <div>
-                <div className="section-badge">Jobs</div>
-                <h2>{searchResults ? `Results for "${searchQuery}"` : 'Recommended Jobs'}</h2>
-                <p>Popular opportunities you might be interested in</p>
+        <div className="jobs-list">
+          {searching && <p className="jcn-loading">Searching open positions...</p>}
+          {searchError && <p className="jcn-loading">{searchError}</p>}
+          {!searching && displayJobs.map((job) => (
+            <div key={job.id} className="job-card-new">
+              <div className="jcn-center">
+                <h3>{job.title}</h3>
+                <p className="jcn-company">{job.company_name || 'Organization'}</p>
+                <div className="jcn-meta">
+                  <span>📍 {job.location || 'Remote'}</span>
+                  {job.salary_min != null && <span>💰 ₹{job.salary_min}-{job.salary_max || ''} LPA</span>}
+                  <span>⏰ {job.employment_type || 'Full-time'}</span>
+                </div>
+                <div className="jcn-skills">
+                  {(job.required_skills || []).map((skill, j) => (
+                    <span key={j} className="jcn-skill">{skill}</span>
+                  ))}
+                </div>
               </div>
-              <Link to="/dashboard" className="view-all-btn">View All →</Link>
+              <div className="jcn-right">
+                <Link to="/upload" className="jcn-apply">Apply with Resume →</Link>
+              </div>
             </div>
-            <div className="jobs-list">
-              {searching && <p className="jcn-loading">Searching jobs...</p>}
-              {searchError && <p className="jcn-loading">{searchError}</p>}
-              {!searchResults && !searching && (liveJobs.length > 0 ? liveJobs : recommendedJobs).map((job, i) => (
-                <div key={job.id ?? i} className="job-card-new">
-                  <div className="jcn-left">
-                    <div className="jcn-logo-wrap">
-                      <span className="jcn-logo">{job.logo ?? '💼'}</span>
-                    </div>
-                  </div>
-                  <div className="jcn-center">
-                    <h3>{job.title}</h3>
-                    <p className="jcn-company">{job.company_name ?? job.company}</p>
-                    <div className="jcn-meta">
-                      <span>📍 {job.location || 'Remote'}</span>
-                      {job.salary_min != null && <span>💰 {job.salary_min}-{job.salary_max ?? ''}</span>}
-                      <span>⏰ {job.employment_type ?? 'Full-time'}</span>
-                    </div>
-                    <div className="jcn-skills">
-                      {(job.required_skills ?? job.skills ?? []).map((skill, j) => (
-                        <span key={j} className="jcn-skill">{skill}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="jcn-right">
-                    <span className="jcn-type">{job.employment_type ?? job.type}</span>
-                    <Link to="/upload" className="jcn-apply">Apply →</Link>
-                  </div>
-                </div>
-              ))}
-              {searchResults && searchResults.length > 0 && searchResults.map((job, i) => (
-                <div key={job.id} className="job-card-new">
-                  <div className="jcn-left">
-                    <div className="jcn-logo-wrap"><span className="jcn-logo">💼</span></div>
-                  </div>
-                  <div className="jcn-center">
-                    <h3>{job.title}</h3>
-                    <p className="jcn-company">{job.company_name}</p>
-                    <div className="jcn-meta">
-                      <span>📍 {job.location || 'Remote'}</span>
-                      {job.salary_min != null && <span>💰 {job.salary_min}-{job.salary_max ?? ''}</span>}
-                      <span>⏰ {job.employment_type}</span>
-                    </div>
-                    <div className="jcn-skills">
-                      {(job.required_skills ?? []).map((skill, j) => (
-                        <span key={j} className="jcn-skill">{skill}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="jcn-right">
-                    <span className="jcn-type">{job.employment_type}</span>
-                    <Link to="/upload" className="jcn-apply">Apply →</Link>
-                  </div>
-                </div>
-              ))}
-              {searchResults && searchResults.length === 0 && !searching && (
-                <p className="jcn-loading">No jobs found for "{searchQuery}".</p>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Bottom Callout */}
       <section className="cta-section">
-        <div className="cta-shapes">
-          <div className="cta-shape cta-shape-1"></div>
-          <div className="cta-shape cta-shape-2"></div>
-          <div className="cta-shape cta-shape-3"></div>
-        </div>
         <div className="cta-content">
-          <h2>Ready to Find Your Dream Job?</h2>
-          <p>Upload your resume now and let our AI do the hard work for you.</p>
-          <Link to="/upload" className="cta-btn">Get Started Free →</Link>
+          <h2>Ready to Streamline Your Evaluation Process?</h2>
+          <p>Candidates discover matching roles with ATS insight. Hiring managers review qualified talent with confidence.</p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1.5rem' }}>
+            <Link to="/upload" className="cta-btn">Submit Resume</Link>
+            <Link to="/post-job" className="hero-secondary-btn" style={{ background: 'transparent', color: '#ffffff', borderColor: 'rgba(255,255,255,0.4)' }}>
+              Post a Position
+            </Link>
+          </div>
         </div>
       </section>
     </div>

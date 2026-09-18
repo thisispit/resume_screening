@@ -76,10 +76,49 @@ function Upload() {
   }
 
   const features = [
-    { icon: '🤖', title: 'AI-Powered Analysis', desc: 'Advanced NLP extracts skills, experience, and qualifications automatically.' },
-    { icon: '⚡', title: 'Instant Results', desc: 'Get your resume scored and analyzed in seconds, not hours.' },
-    { icon: '🎯', title: 'Smart Matching', desc: 'AI matches your profile with the most relevant job opportunities.' },
-    { icon: '📊', title: 'Detailed Report', desc: 'Receive comprehensive feedback on strengths and areas for improvement.' }
+    {
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+      ),
+      title: 'Automated Ingestion',
+      desc: 'Accurately extracts contact info, career duration, competencies, and educational history.'
+    },
+    {
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      ),
+      title: 'ATS Compliance Index',
+      desc: 'Evaluates format readability, keyword density, and section structure according to ATS standards.'
+    },
+    {
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+      title: 'Criteria Matching',
+      desc: 'Calculates skill overlap, experience relevance, and degree compatibility with open positions.'
+    },
+    {
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      ),
+      title: 'Actionable Diagnostics',
+      desc: 'Provides specific feedback on missing keywords, section headers, and formatting improvements.'
+    }
   ]
 
   return (
@@ -94,9 +133,9 @@ function Upload() {
       </div>
 
       <section className="upload-header">
-        <div className="section-badge">Upload</div>
-        <h1>Upload Your Resume</h1>
-        <p>Let our AI analyze your resume and find the best job matches for you.</p>
+        <div className="section-badge">Evaluation Pipeline</div>
+        <h1>Candidate Resume Ingestion</h1>
+        <p>Upload your document to evaluate parser compatibility, assess ATS readiness, and generate job matches.</p>
       </section>
 
       <section className="upload-main">
@@ -115,14 +154,20 @@ function Upload() {
           {!file ? (
             <div className="ua-content">
               <div className="ua-icon-wrap">
-                <span className="ua-icon">📤</span>
+                <span className="ua-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </span>
                 <div className="ua-icon-ring"></div>
                 <div className="ua-icon-dots">
                   <span></span><span></span><span></span><span></span>
                 </div>
               </div>
               <h3>Drag & Drop Your Resume</h3>
-              <p>or click to browse files</p>
+              <p>or click to browse files from your computer</p>
               <div className="ua-formats">
                 <span className="format-tag">PDF</span>
                 <span className="format-tag">DOCX</span>
@@ -136,7 +181,14 @@ function Upload() {
             </div>
           ) : (
             <div className="ua-content ua-has-file">
-              <div className="ua-file-icon">📄</div>
+              <div className="ua-file-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
               <h3>{file.name}</h3>
               <p className="ua-file-size">{(file.size / 1024).toFixed(1)} KB</p>
               <div className="ua-actions">
@@ -264,27 +316,43 @@ function Upload() {
       </section>
 
       <section className="upload-steps">
-        <h2>Simple 3-Step Process</h2>
+        <h2>Structured Screening Process</h2>
         <div className="us-grid">
           <div className="us-card">
             <div className="us-num">1</div>
-            <div className="us-icon">📤</div>
-            <h4>Upload PDF</h4>
-            <p>Drag & drop or select your resume file</p>
+            <div className="us-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <h4>Ingest Document</h4>
+            <p>Upload your PDF or DOCX resume securely</p>
           </div>
           <div className="us-arrow">→</div>
           <div className="us-card">
             <div className="us-num">2</div>
-            <div className="us-icon">🤖</div>
-            <h4>AI Analysis</h4>
-            <p>Our AI extracts and analyzes your profile</p>
+            <div className="us-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <h4>Parser Extraction</h4>
+            <p>Normalize technical competencies and work history</p>
           </div>
           <div className="us-arrow">→</div>
           <div className="us-card">
             <div className="us-num">3</div>
-            <div className="us-icon">🎯</div>
-            <h4>Get Results</h4>
-            <p>View matches, scores, and recommendations</p>
+            <div className="us-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h4>ATS Score & Match</h4>
+            <p>Inspect radial ATS readiness and role compatibility</p>
           </div>
         </div>
       </section>

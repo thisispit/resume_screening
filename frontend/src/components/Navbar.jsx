@@ -5,60 +5,66 @@ function Navbar() {
   const location = useLocation()
   const { authenticated, user, logout } = useAuth()
 
+  const userInitial = user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'
+  const isRecruiter = user?.role === 'recruiter'
+
   return (
-    <nav className="navbar">
-      <div className="navbar-bg-shapes">
-        <div className="nb-shape nb-shape-1"></div>
-        <div className="nb-shape nb-shape-2"></div>
-      </div>
+    <header className="navbar">
       <Link to="/" className="navbar-brand">
-        <span className="brand-icon">📋</span>
-        <span className="brand-text">AI Resume Screening</span>
-        <span className="brand-badge">AI</span>
+        <div className="brand-logo-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <line x1="10" y1="9" x2="8" y2="9" />
+          </svg>
+        </div>
+        <span className="brand-text">ResumeScreen</span>
+        <span className="brand-edition-tag">Pro</span>
       </Link>
-      <div className="navbar-links">
+
+      <nav className="navbar-links">
         <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
-          <span className="nav-icon">🏠</span>
-          <span>Home</span>
+          Home
         </Link>
         <Link to="/upload" className={location.pathname === '/upload' ? 'active' : ''}>
-          <span className="nav-icon">📤</span>
-          <span>Upload Resume</span>
+          Upload Resume
         </Link>
         <Link to="/dashboard" className={location.pathname === '/dashboard' ? 'active' : ''}>
-          <span className="nav-icon">📊</span>
-          <span>Dashboard</span>
+          Dashboard
         </Link>
-        {authenticated && user?.role === 'recruiter' && (
+        {authenticated && isRecruiter && (
           <Link to="/post-job" className={location.pathname === '/post-job' ? 'active' : ''}>
-            <span className="nav-icon">➕</span>
-            <span>Post Job</span>
+            Post a Job
           </Link>
         )}
+
         {authenticated ? (
           <div className="nav-user-actions">
-            <span className="nav-role-badge">
-              {user?.role === 'recruiter' ? '🏢 Recruiter' : '🙋 Candidate'}
-            </span>
-            <button onClick={logout} className="nav-auth-btn logout" title="Log out">
-              <span className="nav-icon">🚪</span>
-              <span>{user?.full_name ? user.full_name.split(' ')[0] : 'Logout'}</span>
+            <div className="nav-profile-pill">
+              <span className="nav-avatar-circle">{userInitial}</span>
+              <div className="nav-user-details">
+                <span className="nav-user-name">{user?.full_name?.split(' ')[0]}</span>
+                <span className="nav-user-role-label">{isRecruiter ? 'Recruiter' : 'Candidate'}</span>
+              </div>
+            </div>
+            <button onClick={logout} className="nav-auth-btn logout" title="Sign out">
+              Sign Out
             </button>
           </div>
         ) : (
           <div className="nav-auth-group">
-            <Link to="/login" className="nav-auth-btn login">
-              <span className="nav-icon">🔑</span>
-              <span>Login</span>
+            <Link to="/login" className="nav-auth-btn login-link">
+              Log In
             </Link>
-            <Link to="/register" className="nav-auth-btn register">
-              <span className="nav-icon">✨</span>
-              <span>Sign Up</span>
+            <Link to="/register" className="nav-auth-btn signup-link">
+              Create Account
             </Link>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </header>
   )
 }
 
