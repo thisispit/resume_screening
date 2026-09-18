@@ -169,10 +169,19 @@ function Upload() {
 
         {result && (
           <div className="parse-result">
-            <div className="upload-message">
-              <span className="msg-icon">✅</span>
-              <p>{message}</p>
-              <button onClick={() => navigate('/dashboard')} className="msg-link">View Dashboard →</button>
+            <div className="upload-message" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span className="msg-icon">✅</span>
+                <p style={{ margin: 0, fontWeight: 700 }}>{message}</p>
+              </div>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="rec-apply-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+              >
+                <span>🎯 View AI Job Matches</span>
+                <span>→</span>
+              </button>
             </div>
 
             <div className="pr-grid">

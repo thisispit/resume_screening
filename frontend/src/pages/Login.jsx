@@ -13,6 +13,7 @@ function Login({ initialMode }) {
     location.pathname === '/signup'
 
   const [mode, setMode] = useState(isRegisterRoute ? 'register' : 'login') // 'login' | 'register'
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (initialMode) {
@@ -124,14 +125,25 @@ function Login({ initialMode }) {
 
           <label className="auth-field">
             <span>Password</span>
-            <input
-              type="password"
-              required
-              minLength={mode === 'register' ? 8 : 1}
-              value={form.password}
-              onChange={(e) => update('password', e.target.value)}
-              placeholder={mode === 'register' ? 'At least 8 characters' : 'Your password'}
-            />
+            <div className="auth-password-wrap">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={mode === 'register' ? 8 : 1}
+                value={form.password}
+                onChange={(e) => update('password', e.target.value)}
+                placeholder={mode === 'register' ? 'At least 8 characters' : 'Your password'}
+              />
+              <button
+                type="button"
+                className="pwd-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '👁️' : '🔒'}
+              </button>
+            </div>
           </label>
 
           {mode === 'register' && (
