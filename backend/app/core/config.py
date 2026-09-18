@@ -25,6 +25,8 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/resume_screening"
+    # Direct / session-mode URL used by Alembic for migrations (avoids pgbouncer tx-mode limits)
+    DIRECT_URL: str = ""
 
     # Security
     SECRET_KEY: str = "change-me-in-production"

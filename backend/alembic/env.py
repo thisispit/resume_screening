@@ -11,8 +11,11 @@ from app.core.database import Base
 
 config = context.config
 
-# Escape '%' so configparser interpolation does not choke on encoded passwords.
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
+# Use DIRECT_URL (session-mode pooler) for migrations when set — pgbouncer
+# transaction-mode pooler (port 6543) does not support DDL in migrations.
+# Fall back to DATABASE_URL for local dev without a separate direct URL.
+_migration_url = (settings.DIRECT_URL or settings.DATABASE_URL).replace("%", "%%")
+config.set_main_option("sqlalchemy.url", _migration_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
