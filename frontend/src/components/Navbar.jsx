@@ -36,15 +36,26 @@ function Navbar() {
           </Link>
         )}
         {authenticated ? (
-          <button onClick={logout} className="nav-auth-btn logout">
-            <span className="nav-icon">🚪</span>
-            <span>{user?.full_name ?? 'Logout'}</span>
-          </button>
+          <div className="nav-user-actions">
+            <span className="nav-role-badge">
+              {user?.role === 'recruiter' ? '🏢 Recruiter' : '🙋 Candidate'}
+            </span>
+            <button onClick={logout} className="nav-auth-btn logout" title="Log out">
+              <span className="nav-icon">🚪</span>
+              <span>{user?.full_name ? user.full_name.split(' ')[0] : 'Logout'}</span>
+            </button>
+          </div>
         ) : (
-          <Link to="/login" className="nav-auth-btn login">
-            <span className="nav-icon">🔑</span>
-            <span>Login</span>
-          </Link>
+          <div className="nav-auth-group">
+            <Link to="/login" className="nav-auth-btn login">
+              <span className="nav-icon">🔑</span>
+              <span>Login</span>
+            </Link>
+            <Link to="/register" className="nav-auth-btn register">
+              <span className="nav-icon">✨</span>
+              <span>Sign Up</span>
+            </Link>
+          </div>
         )}
       </div>
     </nav>

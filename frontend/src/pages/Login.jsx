@@ -1,12 +1,28 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-function Login() {
+function Login({ initialMode }) {
   const { login, register } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const isRegisterRoute =
+    initialMode === 'register' ||
+    location.pathname === '/register' ||
+    location.pathname === '/signup'
+
+  const [mode, setMode] = useState(isRegisterRoute ? 'register' : 'login') // 'login' | 'register'
+
+  useEffect(() => {
+    if (initialMode) {
+      setMode(initialMode)
+    } else if (location.pathname === '/register' || location.pathname === '/signup') {
+      setMode('register')
+    } else if (location.pathname === '/login') {
+      setMode('login')
+    }
+  }, [initialMode, location.pathname])
   const [form, setForm] = useState({
     fullName: '',
     email: '',

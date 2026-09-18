@@ -1734,10 +1734,38 @@
   text-decoration: none;
   transition: all 0.25s ease;
 }
+.nav-auth-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
 .nav-auth-btn.login {
   background: linear-gradient(135deg, #1e3a8a, #4a7dff);
   color: #F5F6EC;
   border: 1px solid rgba(197, 168, 90, 0.5);
+}
+.nav-auth-btn.register {
+  background: rgba(255, 255, 255, 0.08);
+  color: #F5F6EC;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.nav-auth-btn.register:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.nav-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.nav-role-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(74, 125, 255, 0.15);
+  color: #93b4ff;
+  border: 1px solid rgba(74, 125, 255, 0.3);
 }
 .nav-auth-btn.logout {
   background: rgba(89, 102, 58, 0.15);
@@ -2023,8 +2051,136 @@
   box-shadow: 0 8px 20px rgba(160, 31, 31, 0.15);
 }
 
+/* Recruiter Applicants Drawer & Candidate Applications */
+.rec-applicants-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(89, 102, 58, 0.2);
+}
+.applicant-toggle-btn {
+  background: rgba(30, 58, 138, 0.1);
+  color: #1e3a8a;
+  border: 1px solid rgba(30, 58, 138, 0.25);
+  padding: 0.45rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.applicant-toggle-btn:hover {
+  background: rgba(30, 58, 138, 0.2);
+  transform: translateY(-1px);
+}
+.applicants-drawer {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+.applicant-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.applicant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.applicant-name {
+  font-weight: 700;
+  color: #0f2155;
+  font-size: 1.05rem;
+}
+.applicant-email {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin-left: 0.5rem;
+}
+.applicant-score-pill {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #fff;
+  background: linear-gradient(135deg, #1e3a8a, #4a7dff);
+}
+.applicant-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.86rem;
+  color: #475569;
+}
+.applicant-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+.applicant-status-select {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #1e293b;
+  cursor: pointer;
+}
+.rec-apply-btn {
+  background: linear-gradient(135deg, #1e3a8a, #4a7dff);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.rec-apply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.35);
+}
+.rec-apply-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.app-status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.app-status-applied { background: #e0f2fe; color: #0369a1; }
+.app-status-reviewed { background: #fef3c7; color: #b45309; }
+.app-status-shortlisted { background: #dcfce7; color: #15803d; }
+.app-status-rejected { background: #fee2e2; color: #b91c1c; }
+.app-status-hired { background: #f3e8ff; color: #7e22ce; }
+
 @media (max-width: 640px) {
   .job-form-row { grid-template-columns: 1fr; }
   .auth-role { grid-template-columns: 1fr; }
   .auth-card { padding: 1.8rem; }
 }
+

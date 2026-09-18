@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.enums import ApplicationStatus
+from app.schemas.job import JobOut
 
 
 class ApplicationCreate(BaseModel):
@@ -37,6 +38,7 @@ class ApplicationOut(BaseModel):
     cover_letter: str | None
     notes: str | None
     created_at: datetime
+    job: JobOut | None = None
 
 
 class CandidateSummary(BaseModel):
