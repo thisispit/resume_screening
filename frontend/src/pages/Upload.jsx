@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authedApi } from '../api/client'
+import AtsGauge from '../components/AtsGauge'
 
 function Upload() {
   const [file, setFile] = useState(null)
@@ -183,6 +184,14 @@ function Upload() {
                 <span>→</span>
               </button>
             </div>
+
+            <AtsGauge
+              score={Math.min(98, Math.round(55 + ((result.skills?.length || 0) * 3) + ((result.total_experience_years || 0) * 5) + ((result.education?.length ? 1 : 0) * 10)))}
+              skillsCount={result.skills?.length || 0}
+              experienceYears={result.total_experience_years || 0}
+              hasEducation={(result.education || []).length > 0}
+              summaryLength={result.summary?.length || 0}
+            />
 
             <div className="pr-grid">
               <div className="pr-card">

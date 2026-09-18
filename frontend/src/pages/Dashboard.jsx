@@ -14,11 +14,39 @@ function Dashboard() {
   const [applyingJobId, setApplyingJobId] = useState(null)
   const [applySuccess, setApplySuccess] = useState('')
 
-  // Recruiter applicant drawers & status
+  // Recruiter applicant drawers, status & filters
   const [expandedJobId, setExpandedJobId] = useState(null)
   const [jobApplicants, setJobApplicants] = useState({}) // { [jobId]: CandidateSummary[] }
   const [loadingApplicants, setLoadingApplicants] = useState(false)
   const [updatingAppId, setUpdatingAppId] = useState(null)
+  const [applicantSearch, setApplicantSearch] = useState('')
+  const [applicantMinScore, setApplicantMinScore] = useState('0')
+  const [applicantStatus, setApplicantStatus] = useState('all')
+
+  const getFilteredApplicants = (applicants) => {
+    if (!applicants) return []
+    return applicants.filter((item) => {
+      const matchPercent = Math.round(item.application.match_score * 100)
+      const minPercent = parseInt(applicantMinScore, 10) || 0
+      if (matchPercent < minPercent) return false
+
+      if (applicantStatus !== 'all' && item.application.status !== applicantStatus) {
+        return false
+      }
+
+      if (applicantSearch.trim()) {
+        const query = applicantSearch.toLowerCase().trim()
+        const nameMatch = (item.candidate_name || '').toLowerCase().includes(query)
+        const emailMatch = (item.candidate_email || '').toLowerCase().includes(query)
+        const skillsMatch = (item.application.matched_skills || []).some((s) =>
+          s.toLowerCase().includes(query)
+        )
+        if (!nameMatch && !emailMatch && !skillsMatch) return false
+      }
+
+      return true
+    })
+  }
 
   const isCandidate = user?.role === 'candidate'
   const isRecruiter = user?.role === 'recruiter'
@@ -435,56 +463,146 @@ function Dashboard() {
                             ) : applicants.length === 0 ? (
                               <p style={{ margin: '0.5rem 0', color: '#64748b' }}>No candidates have applied to this job yet.</p>
                             ) : (
-                              applicants.map((summary, idx) => (
-                                <div key={summary.application.id} className="applicant-item">
-                                  <div className="applicant-header">
-                                    <div>
-                                      <span style={{ fontWeight: 800, color: '#4a7dff', marginRight: '0.5rem' }}>
-                                        #{idx + 1}
-                                      </span>
-                                      <span className="applicant-name">{summary.candidate_name}</span>
-                                      <span className="applicant-email">({summary.candidate_email})</span>
-                                    </div>
-                                    <span className="applicant-score-pill">
-                                      {Math.round(summary.application.match_score * 100)}% Match
-                                    </span>
+                              <>
+                                {/* Recruiter Search & Filter Toolbar */}
+                                <div className="applicant-filter-toolbar">
+                                  <div className="af-search-box">
+                                    <span className="af-search-icon">🔍</span>
+                                    <input
+                                      type="text"
+                                      placeholder="Filter by name, email, or skill (e.g. React, Python)..."
+                                      value={applicantSearch}
+                                      onChange={(e) => setApplicantSearch(e.target.value)}
+                                      className="af-input"
+                                    />
+                                    {applicantSearch && (
+                                      <button
+                                        type="button"
+                                        className="af-clear-btn"
+                                        onClick={() => setApplicantSearch('')}
+                                        title="Clear search"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
                                   </div>
 
-                                  <div className="applicant-meta">
-                                    <span>Experience: <strong>{summary.total_experience_years} yrs</strong></span>
-                                    <span>Applied: <strong>{new Date(summary.application.created_at).toLocaleDateString()}</strong></span>
-                                  </div>
-
-                                  <div className="rec-skills">
-                                    {(summary.application.matched_skills || []).map((s, i) => (
-                                      <span key={`m${i}`} className="rec-skill matched">✓ {s}</span>
-                                    ))}
-                                    {(summary.application.missing_skills || []).map((s, i) => (
-                                      <span key={`x${i}`} className="rec-skill missing">✗ {s}</span>
-                                    ))}
-                                  </div>
-
-                                  <div className="applicant-controls">
-                                    <span style={{ fontSize: '0.86rem', color: '#475569' }}>
-                                      Status: <strong style={{ textTransform: 'capitalize' }}>{summary.application.status}</strong>
-                                    </span>
+                                  <div className="af-dropdowns">
                                     <select
-                                      className="applicant-status-select"
-                                      value={summary.application.status}
-                                      disabled={updatingAppId === summary.application.id}
-                                      onChange={(e) =>
-                                        handleStatusChange(job.id, summary.application.id, e.target.value)
-                                      }
+                                      value={applicantMinScore}
+                                      onChange={(e) => setApplicantMinScore(e.target.value)}
+                                      className="af-select"
                                     >
+                                      <option value="0">All Match Scores</option>
+                                      <option value="80">⭐ 80%+ Match (Top Tier)</option>
+                                      <option value="70">⚡ 70%+ Match (Strong)</option>
+                                      <option value="50">👍 50%+ Match (Moderate)</option>
+                                    </select>
+
+                                    <select
+                                      value={applicantStatus}
+                                      onChange={(e) => setApplicantStatus(e.target.value)}
+                                      className="af-select"
+                                    >
+                                      <option value="all">All Statuses</option>
                                       <option value="applied">Applied</option>
                                       <option value="reviewed">Reviewed</option>
                                       <option value="shortlisted">Shortlisted ⭐</option>
                                       <option value="rejected">Rejected</option>
                                       <option value="hired">Hired 🎉</option>
                                     </select>
+
+                                    {(applicantSearch || applicantMinScore !== '0' || applicantStatus !== 'all') && (
+                                      <button
+                                        type="button"
+                                        className="af-reset-btn"
+                                        onClick={() => {
+                                          setApplicantSearch('')
+                                          setApplicantMinScore('0')
+                                          setApplicantStatus('all')
+                                        }}
+                                      >
+                                        Reset
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
-                              ))
+
+                                <div className="af-summary-line">
+                                  <span>
+                                    Showing <strong>{getFilteredApplicants(applicants).length}</strong> of{' '}
+                                    <strong>{applicants.length}</strong> applicant{applicants.length > 1 ? 's' : ''} (ranked by AI)
+                                  </span>
+                                </div>
+
+                                {getFilteredApplicants(applicants).length === 0 ? (
+                                  <div className="af-no-results">
+                                    <p>No candidates match your current filter criteria.</p>
+                                    <button
+                                      type="button"
+                                      className="af-reset-btn"
+                                      onClick={() => {
+                                        setApplicantSearch('')
+                                        setApplicantMinScore('0')
+                                        setApplicantStatus('all')
+                                      }}
+                                    >
+                                      Clear Filters
+                                    </button>
+                                  </div>
+                                ) : (
+                                  getFilteredApplicants(applicants).map((summary, idx) => (
+                                    <div key={summary.application.id} className="applicant-item">
+                                      <div className="applicant-header">
+                                        <div>
+                                          <span style={{ fontWeight: 800, color: '#4a7dff', marginRight: '0.5rem' }}>
+                                            #{idx + 1}
+                                          </span>
+                                          <span className="applicant-name">{summary.candidate_name}</span>
+                                          <span className="applicant-email">({summary.candidate_email})</span>
+                                        </div>
+                                        <span className="applicant-score-pill">
+                                          {Math.round(summary.application.match_score * 100)}% Match
+                                        </span>
+                                      </div>
+
+                                      <div className="applicant-meta">
+                                        <span>Experience: <strong>{summary.total_experience_years} yrs</strong></span>
+                                        <span>Applied: <strong>{new Date(summary.application.created_at).toLocaleDateString()}</strong></span>
+                                      </div>
+
+                                      <div className="rec-skills">
+                                        {(summary.application.matched_skills || []).map((s, i) => (
+                                          <span key={`m${i}`} className="rec-skill matched">✓ {s}</span>
+                                        ))}
+                                        {(summary.application.missing_skills || []).map((s, i) => (
+                                          <span key={`x${i}`} className="rec-skill missing">✗ {s}</span>
+                                        ))}
+                                      </div>
+
+                                      <div className="applicant-controls">
+                                        <span style={{ fontSize: '0.86rem', color: '#475569' }}>
+                                          Status: <strong style={{ textTransform: 'capitalize' }}>{summary.application.status}</strong>
+                                        </span>
+                                        <select
+                                          className="applicant-status-select"
+                                          value={summary.application.status}
+                                          disabled={updatingAppId === summary.application.id}
+                                          onChange={(e) =>
+                                            handleStatusChange(job.id, summary.application.id, e.target.value)
+                                          }
+                                        >
+                                          <option value="applied">Applied</option>
+                                          <option value="reviewed">Reviewed</option>
+                                          <option value="shortlisted">Shortlisted ⭐</option>
+                                          <option value="rejected">Rejected</option>
+                                          <option value="hired">Hired 🎉</option>
+                                        </select>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </>
                             )}
                           </div>
                         )}

@@ -151,58 +151,138 @@ function Home() {
         <div className="deco-wave"></div>
       </div>
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-badge">
-          <span className="badge-dot"></span>
-          AI-Powered Resume Screening
-        </div>
-        <h1>Find Your Dream Job<br /><span className="hero-highlight">With AI Power</span></h1>
-        <p className="hero-subtitle">
-          Upload your resume and let our AI analyze, score, and match you with the best job opportunities.
-        </p>
+      {/* Redesigned Split Hero Section with Glassmorphic Preview Cards */}
+      <section className="hero-section hero-split">
+        <div className="hero-left">
+          <div className="hero-badge">
+            <span className="badge-dot"></span>
+            AI-Powered Resume Screening & Job Matching
+          </div>
+          <h1>
+            Match Resumes to Jobs <br />
+            <span className="hero-highlight">With Explainable AI</span>
+          </h1>
+          <p className="hero-subtitle">
+            Upload your resume for instant ATS readiness scoring, automatic skill extraction, and personalized job matching. Recruiters screen and rank applicants in seconds.
+          </p>
 
-        <div className="search-container" ref={searchRef}>
-          <form className="search-box" onSubmit={handleSearch}>
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search for jobs... (e.g., Data Scientist, Frontend Developer)"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-              className="search-input"
-            />
-            <button type="submit" className="search-btn">Search Jobs</button>
-          </form>
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="search-suggestions">
-              {suggestions.map((s, i) => (
-                <div key={i} className="suggestion-item" onClick={() => handleSuggestionClick(s)}>
-                  <span className="suggestion-icon">🔍</span>
-                  <span className="suggestion-text">{s}</span>
+          <div className="hero-cta-row">
+            <Link to="/upload" className="hero-primary-btn">
+              <span>📤 Upload Resume Free</span>
+              <span>→</span>
+            </Link>
+            <Link to="/post-job" className="hero-secondary-btn">
+              <span>🏢 Post a Job (Recruiters)</span>
+            </Link>
+          </div>
+
+          <div className="search-container" ref={searchRef}>
+            <form className="search-box" onSubmit={handleSearch}>
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search jobs by title or skill (e.g. React, Python, ML)..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
+                className="search-input"
+              />
+              <button type="submit" className="search-btn">Search Jobs</button>
+            </form>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="search-suggestions">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="suggestion-item" onClick={() => handleSuggestionClick(s)}>
+                    <span className="suggestion-icon">🔍</span>
+                    <span className="suggestion-text">{s}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {searchResults && (
+              <div className={`search-feedback ${searchResults.length === 0 ? 'empty' : ''}`}>
+                {searchResults.length > 0
+                  ? `✓ Found ${searchResults.length} job${searchResults.length > 1 ? 's' : ''} for "${searchQuery}". Scrolling to results below.`
+                  : `No jobs found for "${searchQuery}". Try a different keyword.`}
+              </div>
+            )}
+            {searchError && (
+              <div className="search-feedback empty">
+                ⚠️ {searchError}
+              </div>
+            )}
+          </div>
+
+          <div className="hero-tags">
+            <span className="hero-tags-label" style={{ fontWeight: 700, color: '#64748b', marginRight: '0.3rem' }}>Popular:</span>
+            {['Frontend Developer', 'Data Scientist', 'Python Developer', 'DevOps Engineer', 'ML Engineer'].map(tag => (
+              <span key={tag} className="tag" onClick={() => handleSuggestionClick(tag)}>{tag}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Hero Right: Interactive Glassmorphic Cards Stack */}
+        <div className="hero-right">
+          <div className="hero-cards-stage">
+            {/* Card 1: ATS Live Score */}
+            <div className="hero-glass-card hgc-main">
+              <div className="hgc-header">
+                <div className="hgc-title-wrap">
+                  <span className="hgc-pill">ATS Score Visualizer</span>
+                  <h4>Senior Full-Stack Engineer</h4>
                 </div>
-              ))}
-            </div>
-          )}
-          {searchResults && (
-            <div className={`search-feedback ${searchResults.length === 0 ? 'empty' : ''}`}>
-              {searchResults.length > 0
-                ? `✓ Found ${searchResults.length} job${searchResults.length > 1 ? 's' : ''} for "${searchQuery}". Scrolling to results below.`
-                : `No jobs found for "${searchQuery}". Try a different keyword.`}
-            </div>
-          )}
-          {searchError && (
-            <div className="search-feedback empty">
-              ⚠️ {searchError}
-            </div>
-          )}
-        </div>
+                <div className="hgc-score-circle">
+                  <span className="hgc-score-val">94%</span>
+                  <span className="hgc-score-lbl">ATS Ready</span>
+                </div>
+              </div>
 
-        <div className="hero-tags">
-          {['Frontend Developer', 'Data Scientist', 'UI/UX Designer', 'Backend Developer', 'DevOps Engineer', 'ML Engineer'].map(tag => (
-            <span key={tag} className="tag" onClick={() => handleSuggestionClick(tag)}>{tag}</span>
-          ))}
+              <div className="hgc-skills">
+                <span className="hgc-skill-tag matched">✓ React</span>
+                <span className="hgc-skill-tag matched">✓ Python</span>
+                <span className="hgc-skill-tag matched">✓ FastAPI</span>
+                <span className="hgc-skill-tag matched">✓ PostgreSQL</span>
+                <span className="hgc-skill-tag missing">✗ AWS</span>
+              </div>
+
+              <div className="hgc-bars">
+                <div className="hgc-bar-row">
+                  <span>Skills Overlap</span>
+                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '95%', background: '#10b981' }}></div></div>
+                  <strong>95%</strong>
+                </div>
+                <div className="hgc-bar-row">
+                  <span>Semantic Fit</span>
+                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '92%', background: '#3b82f6' }}></div></div>
+                  <strong>92%</strong>
+                </div>
+                <div className="hgc-bar-row">
+                  <span>Experience</span>
+                  <div className="hgc-track"><div className="hgc-fill" style={{ width: '90%', background: '#8b5cf6' }}></div></div>
+                  <strong>90%</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Floating Candidate Match Badge */}
+            <div className="hero-glass-card hgc-float-1">
+              <div className="hgc-float-icon">⭐</div>
+              <div className="hgc-float-info">
+                <strong>Rank #1 Match</strong>
+                <span>Shortlisted for TechCorp</span>
+              </div>
+              <span className="hgc-float-badge">96% Fit</span>
+            </div>
+
+            {/* Card 3: Live Stats Floating Pill */}
+            <div className="hero-glass-card hgc-float-2">
+              <span className="hgc-live-dot"></span>
+              <div className="hgc-float-info">
+                <strong>Instant AI Parsing</strong>
+                <span>&lt; 1.2s extraction speed</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
