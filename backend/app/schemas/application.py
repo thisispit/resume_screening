@@ -49,3 +49,7 @@ class CandidateSummary(BaseModel):
     candidate_email: str
     resume_skills: list
     total_experience_years: float
+    resume_ats_score: float = 0.0
+    highest_education_level: str | None = None
+    resume_location: str | None = None
+    resume_links: dict | None = None

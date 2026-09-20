@@ -10,7 +10,16 @@ function Upload() {
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [copiedSkills, setCopiedSkills] = useState(false)
   const navigate = useNavigate()
+
+  const handleCopySkills = () => {
+    if (result?.skills?.length) {
+      navigator.clipboard.writeText(result.skills.join(', '))
+      setCopiedSkills(true)
+      setTimeout(() => setCopiedSkills(false), 2000)
+    }
+  }
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0])
@@ -232,13 +241,15 @@ function Upload() {
                 className="rec-apply-btn"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
               >
-                <span>🎯 View AI Job Matches</span>
+                <span>View Job Recommendations</span>
                 <span>→</span>
               </button>
             </div>
 
             <AtsGauge
-              score={Math.min(98, Math.round(55 + ((result.skills?.length || 0) * 3) + ((result.total_experience_years || 0) * 5) + ((result.education?.length ? 1 : 0) * 10)))}
+              score={result.ats_score}
+              breakdown={result.ats_breakdown?.breakdown}
+              actionableTips={result.ats_breakdown?.actionable_tips}
               skillsCount={result.skills?.length || 0}
               experienceYears={result.total_experience_years || 0}
               hasEducation={(result.education || []).length > 0}
@@ -247,49 +258,219 @@ function Upload() {
 
             <div className="pr-grid">
               <div className="pr-card">
-                <h4>Contact</h4>
-                <p><strong>Name:</strong> {result.candidate_name || '—'}</p>
-                <p><strong>Email:</strong> {result.email || '—'}</p>
-                <p><strong>Phone:</strong> {result.phone || '—'}</p>
-                <p><strong>Location:</strong> {result.location || '—'}</p>
+                <div className="pr-card-header">
+                  <h4>Contact Details</h4>
+                  <span className="pr-count-tag">Identity</span>
+                </div>
+                <div className="pr-contact-list">
+                  <p className="pr-contact-item"><strong>Name:</strong> <span>{result.candidate_name || '—'}</span></p>
+                  <p className="pr-contact-item"><strong>Email:</strong> <span>{result.email || <em className="pr-hint">Not detected in document</em>}</span></p>
+                  <p className="pr-contact-item"><strong>Phone:</strong> <span>{result.phone || <em className="pr-hint">Not detected</em>}</span></p>
+                  <p className="pr-contact-item"><strong>Location:</strong> <span>{result.location || <em className="pr-hint">Not specified</em>}</span></p>
+                </div>
+
+                {result.links && Object.keys(result.links).length > 0 && (
+                  <div className="pr-links-wrap">
+                    {result.links.github && (
+                      <a href={result.links.github} target="_blank" rel="noreferrer" className="pr-social-badge" title="View GitHub Profile">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                        </svg>
+                        GitHub ↗
+                      </a>
+                    )}
+                    {result.links.linkedin && (
+                      <a href={result.links.linkedin} target="_blank" rel="noreferrer" className="pr-social-badge" title="View LinkedIn Profile">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                          <rect x="2" y="9" width="4" height="12" />
+                          <circle cx="4" cy="4" r="2" />
+                        </svg>
+                        LinkedIn ↗
+                      </a>
+                    )}
+                    {result.links.portfolio && (
+                      <a href={result.links.portfolio} target="_blank" rel="noreferrer" className="pr-social-badge" title="View Portfolio Website">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        Portfolio ↗
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
+
               <div className="pr-card">
-                <h4>Skills ({result.skills?.length || 0})</h4>
+                <div className="pr-card-header">
+                  <h4>Skills & Technologies ({result.skills?.length || 0})</h4>
+                  {result.skills && result.skills.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleCopySkills}
+                      className="pr-copy-pill"
+                      title="Copy all skills as comma-separated text"
+                    >
+                      {copiedSkills ? '✓ Copied' : 'Copy List'}
+                    </button>
+                  )}
+                </div>
                 <div className="pr-tags">
                   {(result.skills || []).map((s, i) => (
                     <span key={i} className="pr-tag">{s}</span>
                   ))}
                 </div>
               </div>
+
               <div className="pr-card pr-wide">
-                <h4>Summary</h4>
-                <p>{result.summary || 'No summary extracted.'}</p>
+                <div className="pr-card-header">
+                  <h4>Professional Summary</h4>
+                  {result.summary && <span className="pr-count-tag">{result.summary.length} chars</span>}
+                </div>
+                {result.summary ? (
+                  <p className="pr-summary-text">“{result.summary}”</p>
+                ) : (
+                  <div className="pr-notice-box">
+                    <p className="pr-notice-title">No explicit summary section detected</p>
+                    <p className="pr-notice-sub">
+                      Tip: Adding a 2-3 sentence overview at the top of your resume highlighting your primary focus and core technical competencies helps ATS parsers quickly categorize your profile.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <div className="pr-card pr-wide">
+                <div className="pr-card-header">
+                  <h4>Education History ({(result.education || []).length})</h4>
+                  {result.highest_education_level && result.highest_education_level !== 'none' && (
+                    <span className="pr-level-tag">
+                      {result.highest_education_level.replace('_', ' ').toUpperCase()} TIER
+                    </span>
+                  )}
+                </div>
+
+                {(result.education || []).length === 0 ? (
+                  <p className="pr-empty">No education details extracted.</p>
+                ) : (
+                  <div className="pr-edu-grid">
+                    {result.education.map((ed, i) => (
+                      <div key={i} className="pr-edu-item">
+                        <div className="pr-edu-top">
+                          <div>
+                            <h5 className="pr-edu-degree">
+                              {ed.degree || 'Degree'}
+                              {ed.field_of_study && <span className="pr-edu-field"> — {ed.field_of_study}</span>}
+                            </h5>
+                            <p className="pr-edu-inst">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                              </svg>
+                              <span>{ed.institution || 'Educational Institution'}</span>
+                            </p>
+                          </div>
+                          {ed.year && <span className="pr-edu-year">{ed.year}</span>}
+                        </div>
+
+                        {(ed.grade || ed.location) && (
+                          <div className="pr-edu-meta">
+                            {ed.grade && (
+                              <span className="pr-edu-pill grade-pill">
+                                <strong>Score:</strong> {ed.grade}
+                              </span>
+                            )}
+                            {ed.location && (
+                              <span className="pr-edu-pill loc-pill">
+                                📍 {ed.location}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="pr-card pr-wide">
                 <h4>Experience ({result.total_experience_years || 0} yrs)</h4>
-                {(result.experience || []).length === 0 && <p className="pr-empty">No experience extracted.</p>}
-                <ul className="pr-list">
-                  {(result.experience || []).map((exp, i) => (
-                    <li key={i}>
-                      {exp.title || 'Role'} at {exp.company || '—'}
-                      {exp.duration_years != null && ` (${exp.duration_years} yrs)`}
-                    </li>
-                  ))}
-                </ul>
+                {(result.experience || []).length === 0 ? (
+                  <div className="pr-notice-box">
+                    <p className="pr-notice-title">No formal corporate employment history listed</p>
+                    <p className="pr-notice-sub">Technical projects, open-source work, and practical engineering achievements are highlighted below.</p>
+                  </div>
+                ) : (
+                  <ul className="pr-list">
+                    {result.experience.map((exp, i) => (
+                      <li key={i}>
+                        <strong>{exp.title || 'Role'}</strong> at {exp.company || '—'}
+                        {exp.duration_years != null && ` (${exp.duration_years} yrs)`}
+                        {exp.start_date && ` · ${exp.start_date} – ${exp.end_date || 'Present'}`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              <div className="pr-card pr-wide">
-                <h4>Education</h4>
-                {(result.education || []).length === 0 && <p className="pr-empty">No education extracted.</p>}
-                <ul className="pr-list">
-                  {(result.education || []).map((ed, i) => (
-                    <li key={i}>
-                      {ed.degree || 'Degree'}
-                      {ed.institution && ` · ${ed.institution}`}
-                      {ed.year && ` · ${ed.year}`}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+
+              {result.projects && result.projects.length > 0 && (
+                <div className="pr-card pr-wide">
+                  <div className="pr-card-header">
+                    <h4>Technical Projects ({result.projects.length})</h4>
+                    <span className="pr-count-tag">Engineering Portfolio</span>
+                  </div>
+                  <div className="pr-projects-grid">
+                    {result.projects.map((proj, i) => (
+                      <div key={i} className="pr-project-item">
+                        <div className="pr-project-header">
+                          <h5 className="pr-project-title">{proj.title}</h5>
+                          {proj.year && <span className="pr-project-year">{proj.year}</span>}
+                        </div>
+                        {proj.tools && (
+                          <div className="pr-project-tools">
+                            <span className="pr-tools-label">Stack:</span>
+                            <span className="pr-tools-text">{proj.tools}</span>
+                          </div>
+                        )}
+                        {proj.highlights && proj.highlights.length > 0 ? (
+                          <ul className="pr-project-bullets">
+                            {proj.highlights.map((h, hi) => (
+                              <li key={hi}>{h}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="pr-project-desc">{proj.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.certifications && result.certifications.length > 0 && (
+                <div className="pr-card pr-wide">
+                  <div className="pr-card-header">
+                    <h4>Certifications & Credentials ({result.certifications.length})</h4>
+                    <span className="pr-count-tag">Verified Credentials</span>
+                  </div>
+                  <div className="pr-certs-grid">
+                    {result.certifications.map((c, i) => {
+                      const certName = typeof c === 'object' ? c.name : c
+                      const certDate = typeof c === 'object' ? c.date : null
+                      return (
+                        <div key={i} className="pr-cert-item">
+                          <div className="pr-cert-icon">✓</div>
+                          <div className="pr-cert-info">
+                            <span className="pr-cert-name">{certName}</span>
+                            {certDate && <span className="pr-cert-date">{certDate}</span>}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authedApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import AtsGauge from '../components/AtsGauge'
 
 function Dashboard() {
   const { user, logout } = useAuth()
@@ -13,6 +14,17 @@ function Dashboard() {
   const [error, setError] = useState('')
   const [applyingJobId, setApplyingJobId] = useState(null)
   const [applySuccess, setApplySuccess] = useState('')
+  const [showAtsGauge, setShowAtsGauge] = useState(false)
+  const [showProfileDrawer, setShowProfileDrawer] = useState(false)
+  const [copiedSkills, setCopiedSkills] = useState(false)
+
+  const handleCopySkills = () => {
+    if (resume?.skills?.length) {
+      navigator.clipboard.writeText(resume.skills.join(', '))
+      setCopiedSkills(true)
+      setTimeout(() => setCopiedSkills(false), 2000)
+    }
+  }
 
   // Recruiter applicant drawers, status & filters
   const [expandedJobId, setExpandedJobId] = useState(null)
@@ -176,12 +188,12 @@ function Dashboard() {
   const quickActions = [
     ...(isCandidate
       ? [
-          { icon: '📤', title: 'Upload Resume', desc: 'Upload or refresh your resume for AI screening', link: '/upload', color: 'linear-gradient(135deg, #0f2155, #1e3a8a)' },
-          { icon: '🔍', title: 'Search Jobs', desc: 'Browse available openings and apply', link: '/', color: 'linear-gradient(135deg, #152c6e, #2a4a9f)' },
+          { icon: '📤', title: 'Upload Resume', desc: 'Upload or refresh your resume for AI screening', link: '/upload', color: 'linear-gradient(135deg, #3F4A2C, #59663A)' },
+          { icon: '🔍', title: 'Search Jobs', desc: 'Browse available openings and apply', link: '/', color: 'linear-gradient(135deg, #59663A, #96762B)' },
         ]
       : [
-          { icon: '➕', title: 'Post a New Job', desc: 'Publish open roles with skill & experience requirements', link: '/post-job', color: 'linear-gradient(135deg, #0f2155, #1e3a8a)' },
-          { icon: '👥', title: 'Browse Candidates', desc: 'Screen applicants ranked by AI match score', link: '/dashboard', color: 'linear-gradient(135deg, #152c6e, #2a4a9f)' },
+          { icon: '➕', title: 'Post a New Job', desc: 'Publish open roles with skill & experience requirements', link: '/post-job', color: 'linear-gradient(135deg, #3F4A2C, #59663A)' },
+          { icon: '👥', title: 'Browse Candidates', desc: 'Screen applicants ranked by AI match score', link: '/dashboard', color: 'linear-gradient(135deg, #59663A, #96762B)' },
         ]),
   ]
 
@@ -277,9 +289,13 @@ function Dashboard() {
                 </svg>
               </div>
               <div className="dsc-info">
-                <span className="dsc-value">{resume ? '1' : '0'}</span>
-                <span className="dsc-label">Resume Uploaded</span>
-                <span className="dsc-change">{resume ? resume.original_filename : 'Upload resume to begin'}</span>
+                <span className="dsc-value">
+                  {resume ? `${Math.round(resume.ats_score || 85)}%` : '--'}
+                </span>
+                <span className="dsc-label">ATS Health Index</span>
+                <span className="dsc-change">
+                  {resume ? ((resume.ats_score || 85) >= 80 ? 'ATS Optimized' : 'Needs Optimization') : 'Upload resume to begin'}
+                </span>
               </div>
               <div className="dsc-shape"></div>
             </div>
@@ -327,6 +343,279 @@ function Dashboard() {
               <div className="dsc-shape"></div>
             </div>
           </section>
+
+          {resume && (
+            <div style={{ maxWidth: '1320px', margin: '0 auto 2rem', padding: '0 clamp(1.5rem, 5vw, 5rem)' }}>
+              <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: (showAtsGauge || showProfileDrawer) ? '1.2rem' : '0' }}>
+                <button
+                  type="button"
+                  className="dash-ats-toggle-btn"
+                  style={{ flex: '1 1 300px' }}
+                  onClick={() => {
+                    setShowAtsGauge(!showAtsGauge)
+                    if (!showAtsGauge) setShowProfileDrawer(false)
+                  }}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 14 14" />
+                  </svg>
+                  <span>{showAtsGauge ? 'Hide ATS Diagnostics' : 'Inspect Full ATS Readiness & Diagnostics'}</span>
+                  <span>{showAtsGauge ? '▲' : '▼'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="dash-ats-toggle-btn"
+                  style={{ flex: '1 1 300px' }}
+                  onClick={() => {
+                    setShowProfileDrawer(!showProfileDrawer)
+                    if (!showProfileDrawer) setShowAtsGauge(false)
+                  }}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                  <span>{showProfileDrawer ? 'Hide Profile & Education' : 'Inspect Parsed Profile, Education & Projects'}</span>
+                  <span>{showProfileDrawer ? '▲' : '▼'}</span>
+                </button>
+              </div>
+
+              {showAtsGauge && (
+                <div>
+                  <AtsGauge
+                    score={resume.ats_score}
+                    breakdown={resume.ats_breakdown?.breakdown}
+                    actionableTips={resume.ats_breakdown?.actionable_tips}
+                    skillsCount={resume.skills?.length || 0}
+                    experienceYears={resume.total_experience_years || 0}
+                    hasEducation={(resume.education || []).length > 0}
+                    summaryLength={resume.summary?.length || 0}
+                  />
+                </div>
+              )}
+
+              {showProfileDrawer && (
+                <div className="pr-grid">
+                  <div className="pr-card">
+                    <div className="pr-card-header">
+                      <h4>Contact Details</h4>
+                      <span className="pr-count-tag">Identity</span>
+                    </div>
+                    <div className="pr-contact-list">
+                      <p className="pr-contact-item"><strong>Name:</strong> <span>{resume.candidate_name || '—'}</span></p>
+                      <p className="pr-contact-item"><strong>Email:</strong> <span>{resume.email || <em className="pr-hint">Not detected in document</em>}</span></p>
+                      <p className="pr-contact-item"><strong>Phone:</strong> <span>{resume.phone || <em className="pr-hint">Not detected</em>}</span></p>
+                      <p className="pr-contact-item"><strong>Location:</strong> <span>{resume.location || <em className="pr-hint">Not specified</em>}</span></p>
+                    </div>
+
+                    {resume.links && Object.keys(resume.links).length > 0 && (
+                      <div className="pr-links-wrap">
+                        {resume.links.github && (
+                          <a href={resume.links.github} target="_blank" rel="noreferrer" className="pr-social-badge" title="View GitHub Profile">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                            </svg>
+                            GitHub ↗
+                          </a>
+                        )}
+                        {resume.links.linkedin && (
+                          <a href={resume.links.linkedin} target="_blank" rel="noreferrer" className="pr-social-badge" title="View LinkedIn Profile">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                              <rect x="2" y="9" width="4" height="12" />
+                              <circle cx="4" cy="4" r="2" />
+                            </svg>
+                            LinkedIn ↗
+                          </a>
+                        )}
+                        {resume.links.portfolio && (
+                          <a href={resume.links.portfolio} target="_blank" rel="noreferrer" className="pr-social-badge" title="View Portfolio Website">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="2" y1="12" x2="22" y2="12" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                            Portfolio ↗
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pr-card">
+                    <div className="pr-card-header">
+                      <h4>Skills & Technologies ({resume.skills?.length || 0})</h4>
+                      {resume.skills && resume.skills.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleCopySkills}
+                          className="pr-copy-pill"
+                          title="Copy all skills as comma-separated text"
+                        >
+                          {copiedSkills ? '✓ Copied' : 'Copy List'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="pr-tags">
+                      {(resume.skills || []).map((s, i) => (
+                        <span key={i} className="pr-tag">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pr-card pr-wide">
+                    <div className="pr-card-header">
+                      <h4>Professional Summary</h4>
+                      {resume.summary && <span className="pr-count-tag">{resume.summary.length} chars</span>}
+                    </div>
+                    {resume.summary ? (
+                      <p className="pr-summary-text">“{resume.summary}”</p>
+                    ) : (
+                      <div className="pr-notice-box">
+                        <p className="pr-notice-title">No explicit summary section detected</p>
+                        <p className="pr-notice-sub">
+                          Tip: Adding a 2-3 sentence overview at the top of your resume highlighting your primary focus and core technical competencies helps ATS parsers quickly categorize your profile.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pr-card pr-wide">
+                    <div className="pr-card-header">
+                      <h4>Education History ({(resume.education || []).length})</h4>
+                      {resume.highest_education_level && resume.highest_education_level !== 'none' && (
+                        <span className="pr-level-tag">
+                          {resume.highest_education_level.replace('_', ' ').toUpperCase()} TIER
+                        </span>
+                      )}
+                    </div>
+
+                    {(resume.education || []).length === 0 ? (
+                      <p className="pr-empty">No education details extracted.</p>
+                    ) : (
+                      <div className="pr-edu-grid">
+                        {resume.education.map((ed, i) => (
+                          <div key={i} className="pr-edu-item">
+                            <div className="pr-edu-top">
+                              <div>
+                                <h5 className="pr-edu-degree">
+                                  {ed.degree || 'Degree'}
+                                  {ed.field_of_study && <span className="pr-edu-field"> — {ed.field_of_study}</span>}
+                                </h5>
+                                <p className="pr-edu-inst">
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                                  </svg>
+                                  <span>{ed.institution || 'Educational Institution'}</span>
+                                </p>
+                              </div>
+                              {ed.year && <span className="pr-edu-year">{ed.year}</span>}
+                            </div>
+
+                            {(ed.grade || ed.location) && (
+                              <div className="pr-edu-meta">
+                                {ed.grade && (
+                                  <span className="pr-edu-pill grade-pill">
+                                    <strong>Score:</strong> {ed.grade}
+                                  </span>
+                                )}
+                                {ed.location && (
+                                  <span className="pr-edu-pill loc-pill">
+                                    📍 {ed.location}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pr-card pr-wide">
+                    <h4>Experience ({resume.total_experience_years || 0} yrs)</h4>
+                    {(resume.experience || []).length === 0 ? (
+                      <div className="pr-notice-box">
+                        <p className="pr-notice-title">No formal corporate employment history listed</p>
+                        <p className="pr-notice-sub">Technical projects, open-source work, and practical engineering achievements are highlighted below.</p>
+                      </div>
+                    ) : (
+                      <ul className="pr-list">
+                        {resume.experience.map((exp, i) => (
+                          <li key={i}>
+                            <strong>{exp.title || 'Role'}</strong> at {exp.company || '—'}
+                            {exp.duration_years != null && ` (${exp.duration_years} yrs)`}
+                            {exp.start_date && ` · ${exp.start_date} – ${exp.end_date || 'Present'}`}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {resume.projects && resume.projects.length > 0 && (
+                    <div className="pr-card pr-wide">
+                      <div className="pr-card-header">
+                        <h4>Technical Projects ({resume.projects.length})</h4>
+                        <span className="pr-count-tag">Engineering Portfolio</span>
+                      </div>
+                      <div className="pr-projects-grid">
+                        {resume.projects.map((proj, i) => (
+                          <div key={i} className="pr-project-item">
+                            <div className="pr-project-header">
+                              <h5 className="pr-project-title">{proj.title}</h5>
+                              {proj.year && <span className="pr-project-year">{proj.year}</span>}
+                            </div>
+                            {proj.tools && (
+                              <div className="pr-project-tools">
+                                <span className="pr-tools-label">Stack:</span>
+                                <span className="pr-tools-text">{proj.tools}</span>
+                              </div>
+                            )}
+                            {proj.highlights && proj.highlights.length > 0 ? (
+                              <ul className="pr-project-bullets">
+                                {proj.highlights.map((h, hi) => (
+                                  <li key={hi}>{h}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="pr-project-desc">{proj.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {resume.certifications && resume.certifications.length > 0 && (
+                    <div className="pr-card pr-wide">
+                      <div className="pr-card-header">
+                        <h4>Certifications & Credentials ({resume.certifications.length})</h4>
+                        <span className="pr-count-tag">Verified Credentials</span>
+                      </div>
+                      <div className="pr-certs-grid">
+                        {resume.certifications.map((c, i) => {
+                          const certName = typeof c === 'object' ? c.name : c
+                          const certDate = typeof c === 'object' ? c.date : null
+                          return (
+                            <div key={i} className="pr-cert-item">
+                              <div className="pr-cert-icon">✓</div>
+                              <div className="pr-cert-info">
+                                <span className="pr-cert-name">{certName}</span>
+                                {certDate && <span className="pr-cert-date">{certDate}</span>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <section className="dash-content">
             {!resume && (
@@ -608,21 +897,54 @@ function Dashboard() {
                                     <div key={summary.application.id} className="applicant-item">
                                       <div className="applicant-header">
                                         <div>
-                                          <span style={{ fontWeight: 800, color: '#4a7dff', marginRight: '0.5rem' }}>
+                                          <span style={{ fontWeight: 800, color: '#3F4A2C', marginRight: '0.5rem' }}>
                                             #{idx + 1}
                                           </span>
                                           <span className="applicant-name">{summary.candidate_name}</span>
                                           <span className="applicant-email">({summary.candidate_email})</span>
                                         </div>
-                                        <span className="applicant-score-pill">
-                                          {Math.round(summary.application.match_score * 100)}% Match
-                                        </span>
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                          {summary.resume_ats_score > 0 && (
+                                            <span className="applicant-ats-pill" title="ATS Resume Readability Score">
+                                              ATS: {Math.round(summary.resume_ats_score)}%
+                                            </span>
+                                          )}
+                                          <span className="applicant-score-pill">
+                                            {Math.round(summary.application.match_score * 100)}% Match
+                                          </span>
+                                        </div>
                                       </div>
 
                                       <div className="applicant-meta">
                                         <span>Experience: <strong>{summary.total_experience_years} yrs</strong></span>
+                                        {summary.highest_education_level && summary.highest_education_level !== 'none' && (
+                                          <span>Edu: <strong style={{ textTransform: 'capitalize' }}>{summary.highest_education_level.replace('_', ' ')}</strong></span>
+                                        )}
+                                        {summary.resume_location && (
+                                          <span>📍 <strong>{summary.resume_location}</strong></span>
+                                        )}
                                         <span>Applied: <strong>{new Date(summary.application.created_at).toLocaleDateString()}</strong></span>
                                       </div>
+
+                                      {summary.resume_links && Object.keys(summary.resume_links).length > 0 && (
+                                        <div className="applicant-social-links" style={{ display: 'flex', gap: '0.45rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                                          {summary.resume_links.github && (
+                                            <a href={summary.resume_links.github} target="_blank" rel="noreferrer" className="pr-social-badge" style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}>
+                                              GitHub ↗
+                                            </a>
+                                          )}
+                                          {summary.resume_links.linkedin && (
+                                            <a href={summary.resume_links.linkedin} target="_blank" rel="noreferrer" className="pr-social-badge" style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}>
+                                              LinkedIn ↗
+                                            </a>
+                                          )}
+                                          {summary.resume_links.portfolio && (
+                                            <a href={summary.resume_links.portfolio} target="_blank" rel="noreferrer" className="pr-social-badge" style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}>
+                                              Portfolio ↗
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
 
                                       <div className="rec-skills">
                                         {(summary.application.matched_skills || []).map((s, i) => (

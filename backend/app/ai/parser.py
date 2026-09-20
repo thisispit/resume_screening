@@ -18,21 +18,46 @@ _PHONE_RE = re.compile(
     r"(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)?\d{3,4}[\s.-]?\d{4}"
 )
 
-_EDUCATION_PATTERNS: list[tuple[str, str]] = [
-    (r"\bph\.?\s?d\b|doctor of philosophy", "phd"),
+_EDUCATION_PATTERNS: list[tuple[str, str, str]] = [
+    (r"\bph\.?\s?d\b|doctor of philosophy", "phd", "Ph.D"),
     (
         r"\bm(?:\.\s?)?tech\b|master of (?:technology|engineering|science|business|arts|computer|administration)|"
         r"\bm\.?c\.?a\b|\bm(?:\.\s?)?s\b|\bm\.?sc\b|\bm\.?com\b|\bm\.?b\.?a\b|\bm\.?a\b|\bm\.?e\b",
         "master",
+        "Master",
     ),
     (
         r"\bb(?:\.\s?)?tech\b|bachelor of (?:technology|engineering|science|business|arts|computer|administration)|"
         r"\bb\.?c\.?a\b|\bb\.?e\b|\bb(?:\.\s?)?s\b|\bb\.?sc\b|\bb\.?com\b|\bb\.?b\.?a\b|\bb\.?a\b",
         "bachelor",
+        "Bachelor",
     ),
-    (r"\b(?:diploma|pg ?diploma)\b", "diploma"),
+    (r"\b(?:diploma|pg ?diploma)\b", "diploma", "Diploma"),
+    (
+        r"\b(?:senior secondary|12th|class\s*(?:xii|12)|intermediate|higher secondary)\b",
+        "senior_secondary",
+        "Senior Secondary (12th)",
+    ),
+    (
+        r"\b(?:secondary|10th|class\s*(?:x|10)|matriculation|high school)\b",
+        "secondary",
+        "Secondary (10th)",
+    ),
 ]
-_EDUCATION_LEVEL_RANK = {"none": 0, "diploma": 1, "bachelor": 2, "master": 3, "phd": 4}
+_EDUCATION_LEVEL_RANK = {
+    "none": 0,
+    "secondary": 1,
+    "senior_secondary": 2,
+    "diploma": 3,
+    "bachelor": 4,
+    "master": 5,
+    "phd": 6,
+}
+
+_INSTITUTION_KW = re.compile(
+    r"\b(?:University|Institute(?: of [A-Za-z ]+)?|College(?: of [A-Za-z ]+)?|School|Academy|Campus|IIT|NIT|IIIT|BITS|Polytechnic|Vidyalaya|Gurukul|Kendra|Technical Campus|Faculty of [A-Za-z ]+)\b",
+    re.IGNORECASE,
+)
 
 _MONTHS = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
@@ -51,16 +76,34 @@ _DATE_RANGE_RE = re.compile(
     rf"(?:(?P<em>(?:{_MONTHS_PAT}))\s+)?(?P<ey>{_YEAR}|present|current|now|till\s*date|till now)",
     re.IGNORECASE,
 )
+_YEAR_RANGE_RE = re.compile(
+    r"(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?(?:19|20)\d{2}\s*[-–—/to]+\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?(?:(?:19|20)\d{2}|present|current|now)",
+    re.IGNORECASE,
+)
+_SINGLE_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+_GRADE_RE = re.compile(
+    r"(?:cgpa|gpa|percentage|percent|score)?\s*[:\-]?\s*(\d+(?:\.\d+)?\s*(?:/\s*\d+(?:\.\d+)?|%))",
+    re.IGNORECASE,
+)
 _YEARS_CLAIM_RE = re.compile(r"(\d+(?:\.\d+)?)\s*\+?\s*years?", re.IGNORECASE)
 
 _SECTION_HEADINGS = {
-    "experience": r"work experience|professional experience|experience|employment history",
-    "education": r"education( & qualifications)?|academic (background|qualifications)",
-    "projects": r"projects?|academic projects?",
-    "certifications": r"certifications?|licenses?|courses? & certifications?",
-    "skills": r"(technical )?skills|technical proficienc(?:y|ies)|technologies",
-    "summary": r"summary|profile|objective|about me",
+    "experience": r"(?:work |professional |employment )?experience|employment history|work history",
+    "education": r"education(?: & qualifications)?|academic (?:background|qualifications)|educational background",
+    "projects": r"(?:academic |key |personal )?projects?",
+    "certifications": r"certifications?|licenses?|courses? & certifications?|credentials?",
+    "skills": r"(?:technical )?skills|technical proficienc(?:y|ies)|technologies|core competencies",
+    "summary": r"(?:professional |executive |career |personal )?summary|(?:career )?objective|profile|about me|overview|biography",
+    "links": r"contact links?|social links?|profiles?",
 }
+
+_KNOWN_CITIES_STATES = [
+    "greater noida", "noida", "gurgaon", "gurugram", "delhi", "new delhi",
+    "bengaluru", "bangalore", "hyderabad", "pune", "mumbai", "chennai", "kolkata",
+    "bhagalpur", "patna", "banka", "ranchi", "jaipur", "lucknow", "ahmedabad",
+    "uttar pradesh", "bihar", "karnataka", "telangana", "maharashtra", "tamil nadu",
+    "haryana", "west bengal", "rajasthan", "gujarat", "india",
+]
 
 # Role-title hints used to split experience section into jobs.
 _ROLE_SENIORITY = r"(?:senior|lead|junior|sr\.?|jr\.?|principal|staff|chief|associate|assistant|principal|chartered)?"
@@ -112,10 +155,35 @@ def extract_text_pdf(path: str) -> str:
     import fitz  # PyMuPDF
 
     parts: list[str] = []
+    links_info: list[str] = []
+    seen_links: set[str] = set()
+
     with fitz.open(path) as doc:
         for page in doc:
             parts.append(page.get_text("text"))
-    return "\n".join(parts)
+            for link in page.get_links():
+                uri = link.get("uri", "")
+                if not uri or uri in seen_links:
+                    continue
+                seen_links.add(uri)
+                uri_lower = uri.lower()
+                if uri_lower.startswith("mailto:"):
+                    email = uri[7:].split("?")[0].strip()
+                    if email:
+                        links_info.append(f"Email: {email}")
+                elif "github.com" in uri_lower:
+                    links_info.append(f"GitHub: {uri.strip()}")
+                elif "linkedin.com" in uri_lower:
+                    links_info.append(f"LinkedIn: {uri.strip()}")
+                elif uri.startswith("http") and not any(k in uri_lower for k in ["github.com", "linkedin.com", "google.com"]):
+                    links_info.append(f"Portfolio: {uri.strip()}")
+
+    raw = "\n".join(parts)
+    # Strip non-printable/corrupted font glyphs
+    clean_text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]", " ", raw)
+    if links_info:
+        clean_text += "\n\nContact Links:\n" + "\n".join(links_info)
+    return clean_text
 
 
 def extract_text_docx(path: str) -> str:
@@ -143,7 +211,8 @@ def extract_text(path: str, file_type: str) -> str:
 # ---------- Structured parsing ----------
 
 def _clean_line(line: str) -> str:
-    return line.strip().strip("|•·-–—").strip()
+    cleaned = re.sub(r"^[\s•·‣▪◦\u25e6\-*§ï#\x80\x83]+", "", line).strip()
+    return cleaned.strip("|•·-–—").strip()
 
 
 def _guess_name(text: str) -> str | None:
@@ -402,41 +471,134 @@ def _finalize_block(block: dict) -> dict:
 # ---------- Education ----------
 
 def _parse_education(text: str) -> tuple[list[dict], str]:
+    edu_section = _extract_section(text, "education") or text
+    lines = [l.strip() for l in edu_section.splitlines() if l.strip()]
+
+    blocks: list[list[str]] = []
+    current_block: list[str] = []
+
+    for line in lines:
+        has_inst = any(_INSTITUTION_KW.search(l) for l in current_block)
+        has_deg = any(any(re.search(pat, l, re.IGNORECASE) for pat, _, _ in _EDUCATION_PATTERNS) for l in current_block)
+
+        is_inst = bool(_INSTITUTION_KW.search(line))
+        is_deg = any(re.search(pat, line, re.IGNORECASE) for pat, _, _ in _EDUCATION_PATTERNS)
+
+        if (is_inst and has_inst) or (is_deg and has_deg and not is_inst):
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
+        current_block.append(line)
+
+    if current_block:
+        blocks.append(current_block)
+
     entries: list[dict] = []
     highest = "none"
-    edu_section = _extract_section(text, "education") or text
-    seen: set[tuple[str, str]] = set()
+    seen: set[str] = set()
 
-    for pattern, level in _EDUCATION_PATTERNS:
-        for m in re.finditer(pattern, edu_section, re.IGNORECASE):
-            degree = m.group(0).strip().rstrip(",").strip()
-            snippet = edu_section[max(0, m.start() - 40): m.end() + 160]
+    for b in blocks:
+        block_text = "\n".join(b)
+        degree = None
+        level = "bachelor"
+        degree_label = None
+        institution = None
+        year = None
+        grade = None
+        field = None
+        location = None
 
-            inst_m = _extract_institution(snippet)
-            institution = inst_m if inst_m else None
+        # 1. Year / Dates
+        ym = _YEAR_RANGE_RE.search(block_text)
+        if ym:
+            year = ym.group(0).strip()
+        else:
+            ym = _SINGLE_YEAR_RE.search(block_text)
+            if ym:
+                year = ym.group(0).strip()
 
-            local = snippet[m.end(): m.end() + 50]
-            field_m = _FIELD_RE.search(local)
-            field = field_m.group(1).strip() if field_m else None
-            if field and len(field) < 3:
-                field = None
+        # 2. Grade / Score
+        gm = _GRADE_RE.search(block_text)
+        if gm:
+            for l in b:
+                if re.search(r"cgpa|percentage|gpa|%", l, re.IGNORECASE):
+                    grade = l.strip()
+                    break
+            if not grade:
+                grade = gm.group(0).strip()
 
-            year_m = re.search(r"\b(19|20)\d{2}\b", snippet)
-            entry = {
-                "degree": degree.upper(),
-                "institution": institution,
-                "year": year_m.group(0) if year_m else None,
-                "field_of_study": field,
-                "level": level,
-            }
-            key = (degree.lower(), institution or "")
-            if key in seen:
-                continue
-            seen.add(key)
-            entries.append(entry)
-            if _EDUCATION_LEVEL_RANK[level] > _EDUCATION_LEVEL_RANK[highest]:
-                highest = level
-    return entries, highest
+        # 3. Institution
+        for l in b:
+            if _INSTITUTION_KW.search(l):
+                inst_cand = _extract_institution(l)
+                if not inst_cand:
+                    cleaned_inst = re.sub(
+                        r"\b(?:July|Jan|Feb|Mar|Apr|May|Jun|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\b",
+                        "",
+                        l,
+                        flags=re.IGNORECASE,
+                    )
+                    cleaned_inst = re.sub(r"(?:19|20)\d{2}", "", cleaned_inst)
+                    inst_cand = cleaned_inst.strip(" –-|,")
+
+                if inst_cand and "," in inst_cand:
+                    p_parts = [p.strip() for p in inst_cand.split(",") if p.strip()]
+                    if len(p_parts) > 1 and any(c in p_parts[-1].lower() for c in _KNOWN_CITIES_STATES):
+                        if not location:
+                            location = p_parts[-1]
+                        inst_cand = ", ".join(p_parts[:-1])
+
+                if inst_cand:
+                    institution = inst_cand
+                    break
+
+        # 4. Degree, Field, Location
+        for l in b:
+            for pat, lvl, label in _EDUCATION_PATTERNS:
+                m = re.search(pat, l, re.IGNORECASE)
+                if m:
+                    level = lvl
+                    degree_label = label
+                    parts = re.split(r"[,–—|-]", l)
+                    degree = parts[0].strip()
+                    rem_parts = [p.strip() for p in parts[1:] if p.strip()]
+                    for p in rem_parts:
+                        p_lower = p.lower()
+                        if any(c in p_lower for c in _KNOWN_CITIES_STATES):
+                            if not location:
+                                location = p
+                            else:
+                                location = f"{location}, {p}"
+                        elif not field and not _INSTITUTION_KW.search(p):
+                            field = p
+                    break
+            if degree:
+                break
+
+        entry_key = (degree or degree_label or "").lower()
+        if entry_key and entry_key in seen:
+            continue
+        seen.add(entry_key)
+
+        entries.append({
+            "degree": degree or degree_label or "Degree",
+            "institution": institution,
+            "field_of_study": field,
+            "year": year,
+            "grade": grade,
+            "location": location,
+            "level": level,
+        })
+
+        if _EDUCATION_LEVEL_RANK.get(level, 0) > _EDUCATION_LEVEL_RANK.get(highest, 0):
+            highest = level
+
+    if highest in ["secondary", "senior_secondary"]:
+        highest_normalized = "high_school"
+    else:
+        highest_normalized = highest
+
+    return entries, highest_normalized
 
 
 # ---------- Summary ----------
@@ -444,14 +606,160 @@ def _parse_education(text: str) -> tuple[list[dict], str]:
 def _extract_summary(text: str) -> str | None:
     section = _extract_section(text, "summary")
     if section:
-        cleaned = re.sub(r"\s+", " ", section).strip()
-        return cleaned[:800] if cleaned else None
-    for line in text.splitlines():
+        clean_lines: list[str] = []
+        for line in section.splitlines():
+            l_clean = _clean_line(line)
+            if not l_clean:
+                continue
+            # Filter out stray contact icons or social URLs
+            if re.search(r"\b(github|linkedin|gmail|portfolio|\+?\d{10})\b", l_clean, re.IGNORECASE):
+                continue
+            clean_lines.append(l_clean)
+        cleaned = " ".join(clean_lines).strip()
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if len(cleaned) > 25:
+            return cleaned[:800]
+
+    # Conservative fallback: only search first 25 lines of the resume and only if it matches summary phrasing
+    _SUMMARY_INDICATORS = re.compile(
+        r"\b(?:engineer|developer|architect|student|graduate|passionate|experienced|proven|seeking|motivated|focused|enthusiastic|specialized|expertise|background)\b",
+        re.IGNORECASE,
+    )
+    for line in text.splitlines()[:25]:
         line = _clean_line(line)
-        if 50 < len(line) < 500 and "@" not in line:
-            if not re.match(r"^(?:{})".format("|".join(_SECTION_HEADINGS.values())), line, re.IGNORECASE):
+        if 50 < len(line) < 400 and "@" not in line:
+            if re.search(r"\b(github|linkedin|gmail|portfolio|\+?\d{10})\b", line, re.IGNORECASE):
+                continue
+            if re.match(r"^(?:{})".format("|".join(_SECTION_HEADINGS.values())), line, re.IGNORECASE):
+                continue
+            if _SUMMARY_INDICATORS.search(line):
                 return re.sub(r"\s+", " ", line).strip()[:800]
     return None
+
+
+# ---------- Projects & Certifications ----------
+
+def _parse_projects(text: str) -> list[dict]:
+    body = _extract_section(text, "projects")
+    if not body:
+        return []
+
+    lines = [l.strip() for l in body.splitlines() if l.strip()]
+    projects: list[dict] = []
+    cur_proj: dict | None = None
+
+    for l in lines:
+        is_bullet = bool(re.match(r"^[•·‣▪◦\u25e6\-*]|\d+\.", l))
+        cleaned = _clean_line(l)
+        if not cleaned:
+            continue
+
+        if re.match(r"^tools?\s*(?:used)?\s*:", cleaned, re.IGNORECASE):
+            if cur_proj:
+                cur_proj["tools"] = cleaned.split(":", 1)[1].strip()
+            continue
+
+        if re.match(r"^(?:19|20)\d{2}$", cleaned):
+            if cur_proj and not cur_proj.get("year"):
+                cur_proj["year"] = cleaned
+            continue
+
+        if ":" in cleaned and not cleaned.lower().startswith("tools"):
+            parts = cleaned.split(":", 1)
+            cand_title = parts[0].strip()
+            if 2 < len(cand_title) <= 70 and not any(cand_title.lower().startswith(x) for x in ["http", "email", "phone", "note"]):
+                if cur_proj:
+                    projects.append(cur_proj)
+                cur_proj = {
+                    "title": cand_title,
+                    "year": None,
+                    "tools": None,
+                    "highlights": [parts[1].strip()] if parts[1].strip() else [],
+                    "description": parts[1].strip(),
+                }
+                continue
+
+        if not is_bullet and len(cleaned) < 100 and any(sep in cleaned for sep in ["|", "–", " - ", "—"]):
+            if cur_proj:
+                projects.append(cur_proj)
+            raw_title = re.split(r"[|–—]|\s-\s", cleaned)[0].strip()
+            cur_proj = {
+                "title": raw_title,
+                "year": None,
+                "tools": None,
+                "highlights": [],
+                "description": "",
+            }
+        elif not is_bullet and not cur_proj and len(cleaned) < 80:
+            cur_proj = {
+                "title": cleaned,
+                "year": None,
+                "tools": None,
+                "highlights": [],
+                "description": "",
+            }
+        elif is_bullet:
+            if cur_proj:
+                cur_proj["highlights"].append(cleaned)
+            else:
+                cur_proj = {
+                    "title": cleaned.split(":")[0][:80],
+                    "year": None,
+                    "tools": None,
+                    "highlights": [cleaned],
+                    "description": "",
+                }
+        else:
+            if cur_proj:
+                cur_proj["highlights"].append(cleaned)
+
+    if cur_proj:
+        projects.append(cur_proj)
+
+    for p in projects:
+        p["description"] = " ".join(p["highlights"])[:600]
+
+    return projects[:10]
+
+
+def _parse_certifications(text: str) -> list[dict]:
+    body = _extract_section(text, "certifications")
+    if not body:
+        return []
+
+    lines = [l.strip() for l in body.splitlines() if l.strip()]
+    certs: list[dict] = []
+    cur_cert: dict | None = None
+
+    for l in lines:
+        cleaned = _clean_line(l)
+        if not cleaned:
+            continue
+        # Skip contact links or URLs that might follow or appear in certs
+        if any(w in cleaned.lower() for w in ["contact links", "github", "linkedin", "mailto", "portfolio", "http://", "https://"]):
+            continue
+        is_date = bool(
+            re.match(
+                r"^(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?(?:19|20)\d{2}$",
+                cleaned,
+                re.IGNORECASE,
+            )
+        )
+
+        if is_date:
+            if cur_cert:
+                cur_cert["date"] = cleaned
+                certs.append(cur_cert)
+                cur_cert = None
+        else:
+            if cur_cert:
+                certs.append(cur_cert)
+            cur_cert = {"name": cleaned, "date": None}
+
+    if cur_cert:
+        certs.append(cur_cert)
+
+    return certs[:15]
 
 
 # ---------- Entry point ----------
@@ -488,43 +796,84 @@ def _parse_resume_heuristic(text: str) -> dict:
 
     skills = extract_skills(skills_section if skills_section else text)
 
-    location_m = re.search(
-        r"(?:location|address)\s*[:\-]\s*([A-Za-z .,'-]{3,80})", text, re.IGNORECASE
-    )
-
     education_entries, highest_edu = _parse_education(text)
     exp_years = _parse_experience_years(text)
 
-    projects_body = _extract_section(text, "projects")
-    projects = []
-    if projects_body:
-        bullets = [
-            _clean_line(b)
-            for b in re.split(r"\n(?=[•\-*]|\d+\.|\s{4,})", projects_body)
-            if len(_clean_line(b)) > 15
-        ]
-        projects = [{"title": b.split(":")[0][:120], "description": b[:500]} for b in bullets[:10]]
+    # Location resolution: explicit -> header (non-institution) -> primary education
+    location = None
+    location_m = re.search(
+        r"(?:location|address|based in)\s*[:\-]\s*([A-Za-z .,'-]{3,80})", text, re.IGNORECASE
+    )
+    if location_m:
+        location = location_m.group(1).strip()
+    else:
+        for line in text.splitlines()[:15]:
+            l_clean = _clean_line(line)
+            # Never confuse an institution or degree line with a candidate city location
+            if _INSTITUTION_KW.search(l_clean) or any(re.search(pat, l_clean, re.IGNORECASE) for pat, _, _ in _EDUCATION_PATTERNS):
+                continue
+            l_lower = l_clean.lower()
+            for cs in _KNOWN_CITIES_STATES:
+                if cs != "india" and cs in l_lower:
+                    location = l_clean
+                    break
+            if location:
+                break
 
-    certs_body = _extract_section(text, "certifications")
-    certifications = []
-    if certs_body:
-        for b in re.split(r"\n|;", certs_body):
-            clean = _clean_line(b)
-            if 5 < len(clean) < 200 and not re.match(r"^(page|curriculum)", clean, re.IGNORECASE):
-                certifications.append(clean[:200])
-        certifications = certifications[:15]
+    if not location and education_entries:
+        for ed in education_entries:
+            if ed.get("location"):
+                location = ed["location"]
+                break
+
+    # Social & portfolio links
+    links: dict[str, str] = {}
+    gh_m = re.search(r"(?:https?://)?(?:www\.)?github\.com/[A-Za-z0-9_-]+", text, re.IGNORECASE)
+    if gh_m:
+        val = gh_m.group(0).strip()
+        links["github"] = val if val.startswith("http") else f"https://{val}"
+
+    li_m = re.search(r"(?:https?://)?(?:www\.)?linkedin\.com/in/[A-Za-z0-9_%-]+", text, re.IGNORECASE)
+    if li_m:
+        val = li_m.group(0).strip()
+        links["linkedin"] = val if val.startswith("http") else f"https://{val}"
+
+    pf_m = re.search(
+        r"(?:https?://)?(?:www\.)?(?!github\.com|linkedin\.com)[A-Za-z0-9_.-]+\.(?:site|dev|me|online|vercel\.app|app|io|tech)(?:/[A-Za-z0-9_.-]*)?",
+        text,
+        re.IGNORECASE,
+    )
+    if pf_m:
+        val = pf_m.group(0).strip()
+        links["portfolio"] = val if val.startswith("http") else f"https://{val}"
+
+    # Also resolve any links or email appended from PDF annotations
+    detected_email = email_m.group(0) if email_m else None
+    for line in text.splitlines():
+        if line.startswith("Email: ") and not detected_email:
+            detected_email = line[7:].strip()
+        elif line.startswith("GitHub: ") and "github" not in links:
+            links["github"] = line[8:].strip()
+        elif line.startswith("LinkedIn: ") and "linkedin" not in links:
+            links["linkedin"] = line[10:].strip()
+        elif line.startswith("Portfolio: ") and "portfolio" not in links:
+            links["portfolio"] = line[11:].strip()
+
+    projects = _parse_projects(text)
+    certifications = _parse_certifications(text)
 
     return {
         "candidate_name": _guess_name(text),
-        "email": email_m.group(0) if email_m else None,
+        "email": detected_email,
         "phone": phone,
-        "location": location_m.group(1).strip() if location_m else None,
+        "location": location,
         "summary": _extract_summary(text),
         "skills": skills,
         "education": education_entries,
         "experience": _parse_experience(text),
         "projects": projects,
         "certifications": certifications,
+        "links": links,
         "total_experience_years": exp_years,
         "highest_education_level": highest_edu,
     }

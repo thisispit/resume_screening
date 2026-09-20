@@ -41,6 +41,26 @@ def init_db() -> None:
         Path(upload_dir).mkdir(parents=True, exist_ok=True)
         try:
             Base.metadata.create_all(bind=engine)
+            with engine.begin() as conn:
+                from sqlalchemy import text
+                try:
+                    dialect_name = engine.dialect.name
+                    if dialect_name == "postgresql":
+                        conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ats_score DOUBLE PRECISION DEFAULT 0.0"))
+                        conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ats_breakdown JSONB DEFAULT '{}'::jsonb"))
+                        conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS links JSONB DEFAULT '{}'::jsonb"))
+                    elif dialect_name == "sqlite":
+                        res = conn.execute(text("PRAGMA table_info(resumes)"))
+                        existing_cols = {row[1] for row in res.fetchall()}
+                        if existing_cols:
+                            if "ats_score" not in existing_cols:
+                                conn.execute(text("ALTER TABLE resumes ADD COLUMN ats_score FLOAT DEFAULT 0.0"))
+                            if "ats_breakdown" not in existing_cols:
+                                conn.execute(text("ALTER TABLE resumes ADD COLUMN ats_breakdown JSON DEFAULT '{}'"))
+                            if "links" not in existing_cols:
+                                conn.execute(text("ALTER TABLE resumes ADD COLUMN links JSON DEFAULT '{}'"))
+                except Exception as alter_err:
+                    print(f"[main] schema migration note: {alter_err}")
             _ensure_admin()
         except Exception as exc:
             print(f"[main] init_db exception: {exc}")

@@ -28,13 +28,21 @@ class ResumeOut(BaseModel):
     total_experience_years: float
     highest_education_level: str
 
+    links: dict = {}
+    ats_score: float = 0.0
+    ats_breakdown: dict = {}
+
     created_at: datetime
 
 
 class EducationEntry(BaseModel):
     degree: str
     institution: str | None = None
+    field_of_study: str | None = None
     year: str | None = None
+    grade: str | None = None
+    location: str | None = None
+    level: str | None = None
 
 
 class ExperienceEntry(BaseModel):

@@ -40,6 +40,11 @@ class Resume(Base):
 
     total_experience_years: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     highest_education_level: Mapped[str] = mapped_column(String(20), default="none", nullable=False)
+    links: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+    # ATS compliance scoring
+    ats_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    ats_breakdown: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
     # parsing metadata
     parser_version: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)

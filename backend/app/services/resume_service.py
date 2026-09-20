@@ -9,7 +9,7 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.ai import PARSER_VERSION, extract_text, parse_resume
+from app.ai import PARSER_VERSION, compute_ats_score, extract_text, parse_resume
 from app.ai.matcher import compute_match
 from app.core.config import settings
 from app.models import Job, Resume, User
@@ -57,7 +57,47 @@ async def save_upload(upload: UploadFile, file_type: str) -> tuple[Path, int]:
 
 
 def get_resume_for_user(db: Session, user: User) -> Resume | None:
-    return db.query(Resume).filter(Resume.user_id == user.id).first()
+    resume = db.query(Resume).filter(Resume.user_id == user.id).first()
+    if resume is not None and resume.raw_text:
+        # Check if we should re-parse to upgrade legacy / incomplete parsed data
+        needs_reparse = (
+            not getattr(resume, "ats_score", None)
+            or not getattr(resume, "ats_breakdown", None)
+            or not getattr(resume, "links", None)
+            or not resume.email
+            or not resume.location
+            or (resume.summary and any(w in resume.summary for w in ["§", "ï", "Github", "LinkedIn", "Gmail", "Portfolio"]))
+            or (resume.education and len(resume.education) == 1 and resume.education[0].get("institution") == "Public School")
+        )
+        if needs_reparse:
+            try:
+                parsed = parse_resume(resume.raw_text)
+                resume.candidate_name = parsed.get("candidate_name") or resume.candidate_name
+                resume.email = parsed.get("email") or resume.email
+                resume.phone = parsed.get("phone") or resume.phone
+                resume.location = parsed.get("location") or resume.location
+                clean_summary = parsed.get("summary")
+                if clean_summary:
+                    resume.summary = clean_summary
+                elif resume.summary and any(w in resume.summary for w in ["§", "ï", "Github", "LinkedIn", "Gmail", "Portfolio"]):
+                    resume.summary = None
+                resume.skills = parsed.get("skills") or resume.skills or []
+                resume.education = parsed.get("education") or resume.education or []
+                resume.experience = parsed.get("experience") or resume.experience or []
+                resume.projects = parsed.get("projects") or resume.projects or []
+                resume.certifications = parsed.get("certifications") or resume.certifications or []
+                resume.total_experience_years = parsed.get("total_experience_years", 0.0)
+                resume.highest_education_level = parsed.get("highest_education_level", "none")
+                resume.links = parsed.get("links") or {}
+
+                ats_res = compute_ats_score(resume.raw_text, parsed)
+                resume.ats_score = ats_res.get("ats_score", 0.0)
+                resume.ats_breakdown = ats_res
+                db.commit()
+                db.refresh(resume)
+            except Exception as err:
+                print(f"[resume_service] backfill upgrade warning: {err}")
+    return resume
 
 
 def delete_resume_file(resume: Resume) -> None:
@@ -117,6 +157,8 @@ async def create_or_replace_resume(db: Session, user: User, upload: UploadFile) 
         db.delete(existing)
         db.flush()
 
+    ats_res = compute_ats_score(raw_text, parsed)
+
     resume = Resume(
         user_id=user.id,
         original_filename=upload.filename or f"resume.{file_type}",
@@ -125,6 +167,8 @@ async def create_or_replace_resume(db: Session, user: User, upload: UploadFile) 
         file_size_bytes=size_bytes,
         raw_text=raw_text,
         parser_version=PARSER_VERSION,
+        ats_score=ats_res.get("ats_score", 0.0),
+        ats_breakdown=ats_res,
         **parsed,
     )
     db.add(resume)

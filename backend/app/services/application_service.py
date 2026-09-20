@@ -91,10 +91,15 @@ def update_application(
 def candidate_summary(db: Session, application: Application) -> dict:
     candidate = db.get(User, application.candidate_id)
     resume = db.get(Resume, application.resume_id)
+    ats_score = getattr(resume, "ats_score", 0.0) if resume else 0.0
     return {
         "application": application,
         "candidate_name": candidate.full_name if candidate else "Unknown",
         "candidate_email": candidate.email if candidate else "",
         "resume_skills": (resume.skills or []) if resume else [],
         "total_experience_years": (resume.total_experience_years or 0.0) if resume else 0.0,
+        "resume_ats_score": ats_score or 0.0,
+        "highest_education_level": (resume.highest_education_level or None) if resume else None,
+        "resume_location": (resume.location or None) if resume else None,
+        "resume_links": (resume.links or {}) if resume else {},
     }
