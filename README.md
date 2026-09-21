@@ -10,6 +10,7 @@ An AI-powered resume screening and job matching system for B.Tech project.
 
 ## Project Structure
 
+
 ```
 ai-resume-screening/
 ├── frontend/          # React frontend
